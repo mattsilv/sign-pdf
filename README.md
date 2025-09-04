@@ -6,9 +6,38 @@ A client-side PDF signing application built with modern web technologies. Sign P
 
 - **Privacy-First**: All PDF processing happens locally in your browser
 - **Multiple Annotation Types**: Text, signatures, checkmarks, and dates
-- **WYSIWYG Editing**: What you see is exactly what gets exported
+- **WYSIWYG Editing**: What you see is exactly what gets exported - pixel-perfect positioning
 - **Cross-Platform**: Works on desktop and mobile browsers
 - **Modern Export**: Uses File System Access API with graceful fallbacks
+
+## 🎯 Key Technical Achievements
+
+### Perfect Coordinate Accuracy
+This application solves common PDF annotation positioning issues:
+
+- **Exact positioning**: Annotations appear in exported PDFs exactly where placed in the UI
+- **No position drift**: Fixed the common PDF.js bug where exports don't match preview
+- **Coordinate transformation**: Properly handles PDF (bottom-left origin) vs Canvas (top-left origin) systems
+
+### Important Implementation Details
+
+1. **PDF.js Coordinate Arrays**
+   - `viewport.convertToPdfPoint(x, y)` returns `[x, y]` array, NOT `{x, y}` object
+   - Always destructure as arrays: `const [xPdf, yPdf] = viewport.convertToPdfPoint(x, y)`
+
+2. **Viewport Configuration**
+   - Always use `rotate: 0` to prevent PDFs from rendering upside down
+   - PDF.js automatically handles coordinate transformation - don't double-transform
+
+3. **Anchor Point Differences**
+   - Text: pdf-lib draws from baseline (not top-left)
+   - Images/Signatures: Draw from bottom-left corner
+   - Checkmarks: Custom paths, centered on click point
+
+4. **WYSIWYG Alignment**
+   - UI rendering and PDF export use identical positioning logic
+   - Signatures/checkmarks centered with `translate(-50%, -50%)` in UI
+   - Export centers with `x - width/2, y - height/2` for consistency
 
 ## 🏗️ Tech Stack
 

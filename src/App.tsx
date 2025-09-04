@@ -70,6 +70,10 @@ function App() {
     }
   };
 
+  const handleDeleteAnnotation = (annotationId: string) => {
+    setAnnotations(prev => prev.filter(ann => ann.id !== annotationId));
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -131,11 +135,25 @@ function App() {
             </div>
             <ul>
               {annotations.map(ann => (
-                <li key={ann.id}>
-                  Page {ann.pageIndex + 1}: {ann.type} - {ann.content || 'N/A'}
+                <li key={ann.id} className="annotation-item">
+                  <span>Page {ann.pageIndex + 1}: {ann.type} - {ann.content || 'N/A'}</span>
+                  <button 
+                    className="delete-annotation-button"
+                    onClick={() => handleDeleteAnnotation(ann.id)}
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>
+            <div className="annotations-footer">
+              <button 
+                className="clear-all-annotations-button"
+                onClick={handleClearAnnotations}
+              >
+                Clear All Annotations
+              </button>
+            </div>
           </div>
         )}
       </main>

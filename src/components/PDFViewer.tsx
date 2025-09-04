@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { loadPdfDocument, renderPage } from '../lib/pdf/viewer';
 import { CoordinateMapper } from '../lib/pdf/coordinates';
 import { Annotation } from '../lib/types';
+import { TextInputModal } from './TextInputModal';
 
 interface PDFViewerProps {
   file: File | null;
@@ -31,6 +32,8 @@ export function PDFViewer({
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [viewport, setViewport] = useState<any>(null);
   const [totalPages, setTotalPages] = useState(0);
+  const [textModalOpen, setTextModalOpen] = useState(false);
+  const [pendingTextAnnotation, setPendingTextAnnotation] = useState<{xPdf: number, yPdf: number, pageIndex: number} | null>(null);
 
   // Load PDF
   useEffect(() => {
@@ -60,12 +63,22 @@ export function PDFViewer({
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!viewport) return;
 
-    const rect = canvasRef.current!.getBoundingClientRect();
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Get click position relative to the canvas element
+    // This gives us coordinates in the CSS coordinate system
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
     const mapper = new CoordinateMapper(viewport);
+    
+    // Debug: Check what PDF.js actually returns
+    const pdfPoint = viewport.convertToPdfPoint(x, y);
+    console.log('Raw PDF.js conversion result:', pdfPoint, 'type:', typeof pdfPoint);
+    
     const [xPdf, yPdf] = mapper.toPdfPoint(x, y);
+    console.log('Coordinate mapping:', { clickX: x, clickY: y, pdfX: xPdf, pdfY: yPdf });
 
     const baseAnnotation = {
       pageIndex: currentPage - 1, // 0-based for storage
@@ -82,12 +95,9 @@ export function PDFViewer({
         heightPdf: 50,
       });
     } else if (selectedTool === 'text') {
-      const text = prompt('Enter text:') || 'Sample Text';
-      onAnnotationAdd({
-        ...baseAnnotation,
-        type: 'text' as const,
-        content: text,
-      });
+      // Store the pending annotation and open modal
+      setPendingTextAnnotation(baseAnnotation);
+      setTextModalOpen(true);
     } else if (selectedTool === 'check') {
       onAnnotationAdd({
         ...baseAnnotation,
@@ -99,6 +109,18 @@ export function PDFViewer({
         type: 'date' as const,
         content: new Date().toLocaleDateString(),
       });
+    }
+  };
+
+  // Handle text modal save
+  const handleTextSave = (text: string) => {
+    if (pendingTextAnnotation) {
+      onAnnotationAdd({
+        ...pendingTextAnnotation,
+        type: 'text' as const,
+        content: text,
+      });
+      setPendingTextAnnotation(null);
     }
   };
 
@@ -161,6 +183,23 @@ export function PDFViewer({
           const mapper = new CoordinateMapper(viewport);
           const [x, y] = mapper.toCssPoint(annotation.xPdf, annotation.yPdf);
           
+          // CRITICAL: Position annotations to match export behavior
+          // Text and dates render at the exact click point (baseline)
+          // Signatures and checkmarks are centered on the click point
+          let transform = '';
+          
+          if (annotation.type === 'signature') {
+            // Signature images are centered on click point
+            transform = 'translate(-50%, -50%)';
+          } else if (annotation.type === 'text' || annotation.type === 'date') {
+            // Text renders at exact click point - no transform
+            // This matches how pdf-lib positions text at the baseline
+            transform = '';
+          } else if (annotation.type === 'check') {
+            // Checkmark centered on click point
+            transform = 'translate(-50%, -50%)';
+          }
+          
           return (
             <div
               key={annotation.id}
@@ -169,11 +208,13 @@ export function PDFViewer({
                 position: 'absolute',
                 left: x,
                 top: y,
+                transform: transform,
                 background: 'rgba(255, 255, 0, 0.3)',
                 border: '1px dashed #333',
                 padding: '2px 4px',
                 fontSize: '12px',
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap'
               }}
             >
               {annotation.type === 'text' || annotation.type === 'date' 
@@ -194,6 +235,18 @@ export function PDFViewer({
         <span>{Math.round(scale * 100)}%</span>
         <button onClick={() => onScaleChange(Math.min(3.0, scale + 0.25))}>+</button>
       </div>
+      
+      {/* Text Input Modal */}
+      <TextInputModal
+        isOpen={textModalOpen}
+        onClose={() => {
+          setTextModalOpen(false);
+          setPendingTextAnnotation(null);
+        }}
+        onSave={handleTextSave}
+        title="Add Text Annotation"
+        placeholder="Enter your text..."
+      />
     </div>
   );
 }

@@ -70,13 +70,6 @@ export function ToolPanel({
             </button>
           )}
           <button 
-            className="clear-annotations-button compact"
-            onClick={onClearAnnotations}
-            disabled={!hasAnnotations}
-          >
-            Clear
-          </button>
-          <button 
             className="reset-document-button compact"
             onClick={onResetDocument}
           >

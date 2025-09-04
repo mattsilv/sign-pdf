@@ -17,7 +17,7 @@ export function SignaturePadModal({ isOpen, onClose, onSave }: SignaturePadProps
 
     const canvas = canvasRef.current;
     const signaturePad = new SignaturePad(canvas, {
-      backgroundColor: 'rgb(255, 255, 255)',
+      backgroundColor: 'rgba(255, 255, 255, 0)',
       penColor: 'rgb(0, 0, 0)',
     });
 
@@ -50,7 +50,7 @@ export function SignaturePadModal({ isOpen, onClose, onSave }: SignaturePadProps
 
   const handleSave = () => {
     if (signaturePadRef.current && !isEmpty) {
-      const dataUrl = signaturePadRef.current.toDataURL();
+      const dataUrl = signaturePadRef.current.toDataURL('image/png');
       onSave(dataUrl);
       onClose();
     }
