@@ -46,6 +46,7 @@ export function PDFViewer({
   const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState<{handle: string, x: number, y: number, origWidth: number, origHeight: number} | null>(null);
+  const [dragTransform, setDragTransform] = useState<{id: string, x: number, y: number} | null>(null);
   
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -224,6 +225,7 @@ export function PDFViewer({
       origXPdf: annotation.xPdf,
       origYPdf: annotation.yPdf
     });
+    setDragTransform({ id: annotationId, x: 0, y: 0 });
     
     onAnnotationSelect(annotationId);
   };
@@ -252,13 +254,12 @@ export function PDFViewer({
     });
   };
   
-  // Handle mouse move for dragging - Direct approach without continuous RAF
+  // Handle mouse move for dragging - Using CSS transforms for immediate feedback
   useEffect(() => {
     if (!isDragging || !dragStart || !selectedAnnotationId || !viewport) return;
     
-    // Track last position to prevent redundant updates
-    let lastUpdateX = dragStart.origXPdf;
-    let lastUpdateY = dragStart.origYPdf;
+    let finalDeltaX = 0;
+    let finalDeltaY = 0;
     
     const handleMouseMove = (event: MouseEvent) => {
       // Convert client coordinates to canvas-relative coordinates
@@ -267,33 +268,32 @@ export function PDFViewer({
       const currentY = event.clientY - rect.top;
       
       // Calculate delta in canvas coordinates
-      const deltaX = currentX - dragStart.x;
-      const deltaY = currentY - dragStart.y;
+      finalDeltaX = currentX - dragStart.x;
+      finalDeltaY = currentY - dragStart.y;
       
-      // Convert delta to PDF coordinates
-      const deltaPdfX = deltaX / viewport.scale;
-      const deltaPdfY = -deltaY / viewport.scale; // Negative because PDF Y is inverted
-      
-      // Calculate new position
-      const newXPdf = dragStart.origXPdf + deltaPdfX;
-      const newYPdf = dragStart.origYPdf + deltaPdfY;
-      
-      // Only update if position has actually changed (prevent redundant updates)
-      if (Math.abs(newXPdf - lastUpdateX) > 0.1 || Math.abs(newYPdf - lastUpdateY) > 0.1) {
-        lastUpdateX = newXPdf;
-        lastUpdateY = newYPdf;
+      // Update CSS transform immediately (no React re-render)
+      setDragTransform({ id: selectedAnnotationId, x: finalDeltaX, y: finalDeltaY });
+    };
+    
+    const handleMouseUp = () => {
+      // Convert final delta to PDF coordinates and update the actual position
+      if (finalDeltaX !== 0 || finalDeltaY !== 0) {
+        const deltaPdfX = finalDeltaX / viewport.scale;
+        const deltaPdfY = -finalDeltaY / viewport.scale; // Negative because PDF Y is inverted
         
-        // Update annotation position directly on mouse move
+        const newXPdf = dragStart.origXPdf + deltaPdfX;
+        const newYPdf = dragStart.origYPdf + deltaPdfY;
+        
+        // Update annotation position once on mouse up
         onAnnotationUpdate(selectedAnnotationId, {
           xPdf: newXPdf,
           yPdf: newYPdf
         });
       }
-    };
-    
-    const handleMouseUp = () => {
+      
       setIsDragging(false);
       setDragStart(null);
+      setDragTransform(null);
     };
     
     // Add event listeners
@@ -437,19 +437,25 @@ export function PDFViewer({
           // CRITICAL: Position annotations to match export behavior
           // Text and dates render at the exact click point (baseline)
           // Signatures and checkmarks are centered on the click point
-          let transform = '';
+          let baseTransform = '';
           
           if (annotation.type === 'signature') {
             // Signature images are centered on click point
-            transform = 'translate(-50%, -50%)';
+            baseTransform = 'translate(-50%, -50%)';
           } else if (annotation.type === 'text' || annotation.type === 'date') {
             // Text renders at exact click point - no transform
             // This matches how pdf-lib positions text at the baseline
-            transform = '';
+            baseTransform = '';
           } else if (annotation.type === 'check') {
             // Checkmark centered on click point
-            transform = 'translate(-50%, -50%)';
+            baseTransform = 'translate(-50%, -50%)';
           }
+          
+          // Apply drag transform if this annotation is being dragged
+          const isDraggedAnnotation = dragTransform && dragTransform.id === annotation.id;
+          const transform = isDraggedAnnotation 
+            ? `${baseTransform} translate(${dragTransform.x}px, ${dragTransform.y}px)`
+            : baseTransform;
           
           return (
             <div
@@ -460,11 +466,11 @@ export function PDFViewer({
                 left: x,
                 top: y,
                 transform: transform,
-                background: annotation.id === hoveredAnnotationId ? 'rgba(255, 255, 0, 0.5)' : 'rgba(255, 255, 0, 0.3)',
+                background: annotation.id === hoveredAnnotationId ? 'rgba(255, 255, 0, 0.2)' : 'rgba(255, 255, 0, 0.1)',
                 border: annotation.id === selectedAnnotationId ? '2px solid #2196F3' : '1px dashed #333',
                 boxShadow: annotation.id === selectedAnnotationId ? '0 0 0 1px rgba(33, 150, 243, 0.3)' : 'none',
-                transition: 'all 0.15s ease',
-                padding: '2px 4px',
+                transition: isDraggedAnnotation ? 'none' : 'background 0.15s ease, border 0.15s ease',
+                padding: '1px 2px',
                 fontSize: '12px',
                 pointerEvents: 'auto',
                 cursor: (isDragging || isResizing) && annotation.id === selectedAnnotationId ? 'grabbing' : 'grab',
