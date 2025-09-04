@@ -60,7 +60,9 @@ body {
 }
 
 .file-label {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 1rem 2rem;
   background: #2563eb;
   color: white;
