@@ -255,6 +255,16 @@ export function PDFViewer({
   };
   
   // Handle mouse move for dragging - Using CSS transforms for immediate feedback
+  // PERFORMANCE OPTIMIZATION: This uses CSS transforms for real-time visual updates
+  // instead of updating React state on every mousemove event. This eliminates the
+  // 16-32ms React re-render lag and ensures annotations move smoothly with the cursor.
+  // 
+  // How it works:
+  // 1. During drag: Apply CSS transform to move element visually (no React re-render)
+  // 2. On mouseup: Update actual PDF coordinates in state (single re-render)
+  //
+  // Future improvements could use pointer events for better touch support or
+  // implement momentum/inertia for a more polished feel.
   useEffect(() => {
     if (!isDragging || !dragStart || !selectedAnnotationId || !viewport) return;
     
@@ -452,6 +462,8 @@ export function PDFViewer({
           }
           
           // Apply drag transform if this annotation is being dragged
+          // VISUAL OPTIMIZATION: Combines base positioning transform with drag offset
+          // This allows smooth dragging without modifying the actual position until mouseup
           const isDraggedAnnotation = dragTransform && dragTransform.id === annotation.id;
           const transform = isDraggedAnnotation 
             ? `${baseTransform} translate(${dragTransform.x}px, ${dragTransform.y}px)`

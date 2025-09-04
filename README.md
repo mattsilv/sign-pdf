@@ -7,6 +7,7 @@ A client-side PDF signing application built with modern web technologies. Sign P
 - **Privacy-First**: All PDF processing happens locally in your browser
 - **Multiple Annotation Types**: Text, signatures, checkmarks, and dates
 - **WYSIWYG Editing**: What you see is exactly what gets exported - pixel-perfect positioning
+- **Smooth Dragging**: Real-time annotation movement with zero lag
 - **Cross-Platform**: Works on desktop and mobile browsers
 - **Modern Export**: Uses File System Access API with graceful fallbacks
 
@@ -18,6 +19,17 @@ This application solves common PDF annotation positioning issues:
 - **Exact positioning**: Annotations appear in exported PDFs exactly where placed in the UI
 - **No position drift**: Fixed the common PDF.js bug where exports don't match preview
 - **Coordinate transformation**: Properly handles PDF (bottom-left origin) vs Canvas (top-left origin) systems
+
+### Performance Optimizations
+
+**Smooth Dragging with CSS Transforms**
+- Uses CSS transforms for real-time visual feedback (eliminates React re-render lag)
+- Updates position via `transform: translate()` during drag, commits to state on mouseup
+- Result: Annotations follow cursor exactly with zero delay
+
+**Visual Refinements**
+- Minimal padding (1px 2px) and low opacity (0.1/0.2) for unobtrusive annotations
+- Transitions disabled during drag for immediate response
 
 ### Important Implementation Details
 
@@ -38,6 +50,11 @@ This application solves common PDF annotation positioning issues:
    - UI rendering and PDF export use identical positioning logic
    - Signatures/checkmarks centered with `translate(-50%, -50%)` in UI
    - Export centers with `x - width/2, y - height/2` for consistency
+
+5. **Performance-First Dragging**
+   - Separate visual position (CSS transform) from logical position (React state)
+   - Batch position updates on mouseup instead of every mousemove
+   - Future: Consider pointer events for touch support, momentum/inertia effects
 
 ## 🏗️ Tech Stack
 
