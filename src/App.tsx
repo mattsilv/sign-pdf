@@ -29,9 +29,9 @@ function App() {
   const loadSampleDocument = async () => {
     setIsLoadingSample(true);
     try {
-      const response = await fetch('/sample-signed-nda.pdf');
+      const response = await fetch('/sample-nda.pdf');
       const blob = await response.blob();
-      const sampleFile = new File([blob], 'sample-signed-nda.pdf', { type: 'application/pdf' });
+      const sampleFile = new File([blob], 'sample-nda.pdf', { type: 'application/pdf' });
       setFile(sampleFile);
       setAnnotations([]);
       setCurrentPage(1);
@@ -151,7 +151,7 @@ function App() {
                 {isLoadingSample ? 'Loading...' : 'Try with Sample NDA Document'}
               </button>
               <p className="sample-description">
-                Test the tool with a pre-signed mutual NDA document
+                Test the signing tool with a sample mutual NDA document
               </p>
             </div>
           </div>
