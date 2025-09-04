@@ -14,6 +14,7 @@ function App() {
   const [selectedTool, setSelectedTool] = useState<'text' | 'signature' | 'check' | 'date'>('text');
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -72,6 +73,19 @@ function App() {
 
   const handleDeleteAnnotation = (annotationId: string) => {
     setAnnotations(prev => prev.filter(ann => ann.id !== annotationId));
+    if (selectedAnnotationId === annotationId) {
+      setSelectedAnnotationId(null);
+    }
+  };
+
+  const handleAnnotationUpdate = (id: string, updates: Partial<Annotation>) => {
+    setAnnotations(prev => prev.map(ann => 
+      ann.id === id ? { ...ann, ...updates } : ann
+    ));
+  };
+
+  const handleAnnotationSelect = (id: string | null) => {
+    setSelectedAnnotationId(id);
   };
 
   return (
@@ -114,7 +128,10 @@ function App() {
               scale={scale}
               selectedTool={selectedTool}
               signatureDataUrl={signatureDataUrl}
+              selectedAnnotationId={selectedAnnotationId}
               onAnnotationAdd={handleAnnotationAdd}
+              onAnnotationUpdate={handleAnnotationUpdate}
+              onAnnotationSelect={handleAnnotationSelect}
               onPageChange={setCurrentPage}
               onScaleChange={setScale}
             />

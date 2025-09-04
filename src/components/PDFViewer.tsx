@@ -11,7 +11,10 @@ interface PDFViewerProps {
   scale: number;
   selectedTool: string;
   signatureDataUrl: string | null;
+  selectedAnnotationId: string | null;
   onAnnotationAdd: (annotation: Omit<Annotation, 'id'>) => void;
+  onAnnotationUpdate: (id: string, updates: Partial<Annotation>) => void;
+  onAnnotationSelect: (id: string | null) => void;
   onPageChange: (page: number) => void;
   onScaleChange: (scale: number) => void;
 }
@@ -23,7 +26,10 @@ export function PDFViewer({
   scale,
   selectedTool,
   signatureDataUrl,
+  selectedAnnotationId,
   onAnnotationAdd,
+  onAnnotationUpdate,
+  onAnnotationSelect,
   onPageChange,
   onScaleChange
 }: PDFViewerProps) {
@@ -34,6 +40,30 @@ export function PDFViewer({
   const [totalPages, setTotalPages] = useState(0);
   const [textModalOpen, setTextModalOpen] = useState(false);
   const [pendingTextAnnotation, setPendingTextAnnotation] = useState<{xPdf: number, yPdf: number, pageIndex: number} | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{x: number, y: number, origXPdf: number, origYPdf: number} | null>(null);
+  const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStart, setResizeStart] = useState<{handle: string, x: number, y: number, origWidth: number, origHeight: number} | null>(null);
+  
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onAnnotationSelect(null);
+      } else if (event.key === 'Delete' && selectedAnnotationId) {
+        const annotation = annotations.find(a => a.id === selectedAnnotationId);
+        if (annotation && window.confirm('Delete this annotation?')) {
+          // We need to add a delete handler
+          const deleteBtn = document.querySelector(`[data-delete-id="${selectedAnnotationId}"]`) as HTMLElement;
+          if (deleteBtn) deleteBtn.click();
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedAnnotationId, onAnnotationSelect, annotations]);
 
   // Load PDF
   useEffect(() => {
@@ -59,9 +89,57 @@ export function PDFViewer({
     renderCurrentPage();
   }, [pdfDoc, currentPage, scale]);
 
+  // Check if click is on an existing annotation
+  const getAnnotationAtPoint = (x: number, y: number): Annotation | null => {
+    if (!viewport) return null;
+    
+    const mapper = new CoordinateMapper(viewport);
+    const currentAnnotations = annotations.filter(
+      ann => ann.pageIndex === currentPage - 1
+    );
+    
+    // Check in reverse order (top annotations first)
+    for (let i = currentAnnotations.length - 1; i >= 0; i--) {
+      const ann = currentAnnotations[i];
+      const [annX, annY] = mapper.toCssPoint(ann.xPdf, ann.yPdf);
+      
+      // Define hit area based on annotation type
+      let hitWidth = 50;
+      let hitHeight = 20;
+      let offsetX = 0;
+      let offsetY = 0;
+      
+      if (ann.type === 'signature') {
+        hitWidth = ann.widthPdf || 100;
+        hitHeight = ann.heightPdf || 50;
+        offsetX = -hitWidth / 2;
+        offsetY = -hitHeight / 2;
+      } else if (ann.type === 'text' || ann.type === 'date') {
+        // Estimate text bounds
+        const textContent = ann.content || '';
+        hitWidth = textContent.length * 8;
+        hitHeight = 20;
+        offsetY = -hitHeight / 2;
+      } else if (ann.type === 'check') {
+        hitWidth = 20;
+        hitHeight = 20;
+        offsetX = -10;
+        offsetY = -10;
+      }
+      
+      // Check if click is within annotation bounds
+      if (x >= annX + offsetX && x <= annX + offsetX + hitWidth &&
+          y >= annY + offsetY && y <= annY + offsetY + hitHeight) {
+        return ann;
+      }
+    }
+    
+    return null;
+  };
+
   // Handle canvas clicks for annotation placement
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!viewport) return;
+    if (!viewport || isDragging) return;
 
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
@@ -70,6 +148,18 @@ export function PDFViewer({
     // This gives us coordinates in the CSS coordinate system
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+    
+    // Check if we clicked on an existing annotation
+    const clickedAnnotation = getAnnotationAtPoint(x, y);
+    
+    if (clickedAnnotation) {
+      // Select the annotation instead of placing a new one
+      onAnnotationSelect(clickedAnnotation.id);
+      return;
+    }
+    
+    // If we didn't click on an annotation, deselect and potentially place new one
+    onAnnotationSelect(null);
 
     const mapper = new CoordinateMapper(viewport);
     
@@ -111,6 +201,153 @@ export function PDFViewer({
       });
     }
   };
+
+  // Handle mouse down for drag start
+  const handleMouseDown = (event: React.MouseEvent, annotationId: string) => {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    if (!viewport) return;
+    
+    const annotation = annotations.find(a => a.id === annotationId);
+    if (!annotation) return;
+    
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    setIsDragging(true);
+    setDragStart({
+      x,
+      y,
+      origXPdf: annotation.xPdf,
+      origYPdf: annotation.yPdf
+    });
+    
+    onAnnotationSelect(annotationId);
+  };
+  
+  // Handle resize start
+  const handleResizeStart = (event: React.MouseEvent, handle: string) => {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    if (!viewport || !selectedAnnotationId) return;
+    
+    const annotation = annotations.find(a => a.id === selectedAnnotationId);
+    if (!annotation) return;
+    
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    setIsResizing(true);
+    setResizeStart({
+      handle,
+      x,
+      y,
+      origWidth: annotation.widthPdf || 100,
+      origHeight: annotation.heightPdf || 50
+    });
+  };
+  
+  // Handle mouse move for dragging
+  useEffect(() => {
+    if (!isDragging || !dragStart || !selectedAnnotationId || !viewport) return;
+    
+    const handleMouseMove = (event: MouseEvent) => {
+      const rect = canvasRef.current!.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      const mapper = new CoordinateMapper(viewport);
+      
+      // Calculate delta in CSS coordinates
+      const deltaX = x - dragStart.x;
+      const deltaY = y - dragStart.y;
+      
+      // Convert delta to PDF coordinates
+      // Note: We need to handle the scale factor properly
+      const deltaPdfX = deltaX / viewport.scale;
+      const deltaPdfY = -deltaY / viewport.scale; // Negative because PDF Y is inverted
+      
+      // Update annotation position
+      onAnnotationUpdate(selectedAnnotationId, {
+        xPdf: dragStart.origXPdf + deltaPdfX,
+        yPdf: dragStart.origYPdf + deltaPdfY
+      });
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setDragStart(null);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, selectedAnnotationId, viewport, onAnnotationUpdate]);
+  
+  // Handle mouse move for resizing
+  useEffect(() => {
+    if (!isResizing || !resizeStart || !selectedAnnotationId || !viewport) return;
+    
+    const handleMouseMove = (event: MouseEvent) => {
+      const rect = canvasRef.current!.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      // Calculate delta in CSS coordinates
+      const deltaX = x - resizeStart.x;
+      const deltaY = y - resizeStart.y;
+      
+      // Convert delta to PDF coordinates
+      const deltaPdfX = deltaX / viewport.scale;
+      const deltaPdfY = deltaY / viewport.scale;
+      
+      const annotation = annotations.find(a => a.id === selectedAnnotationId);
+      if (!annotation || annotation.type !== 'signature') return;
+      
+      let newWidth = resizeStart.origWidth;
+      let newHeight = resizeStart.origHeight;
+      
+      // Update dimensions based on handle
+      if (resizeStart.handle.includes('e')) {
+        newWidth = Math.max(20, resizeStart.origWidth + deltaPdfX);
+      } else if (resizeStart.handle.includes('w')) {
+        newWidth = Math.max(20, resizeStart.origWidth - deltaPdfX);
+      }
+      
+      if (resizeStart.handle.includes('s')) {
+        newHeight = Math.max(20, resizeStart.origHeight + deltaPdfY);
+      } else if (resizeStart.handle.includes('n')) {
+        newHeight = Math.max(20, resizeStart.origHeight - deltaPdfY);
+      }
+      
+      // Update annotation dimensions
+      onAnnotationUpdate(selectedAnnotationId, {
+        widthPdf: newWidth,
+        heightPdf: newHeight
+      });
+    };
+    
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      setResizeStart(null);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, resizeStart, selectedAnnotationId, viewport, annotations, onAnnotationUpdate]);
 
   // Handle text modal save
   const handleTextSave = (text: string) => {
@@ -209,21 +446,88 @@ export function PDFViewer({
                 left: x,
                 top: y,
                 transform: transform,
-                background: 'rgba(255, 255, 0, 0.3)',
-                border: '1px dashed #333',
+                background: annotation.id === hoveredAnnotationId ? 'rgba(255, 255, 0, 0.5)' : 'rgba(255, 255, 0, 0.3)',
+                border: annotation.id === selectedAnnotationId ? '2px solid #2196F3' : '1px dashed #333',
+                boxShadow: annotation.id === selectedAnnotationId ? '0 0 0 1px rgba(33, 150, 243, 0.3)' : 'none',
+                transition: 'all 0.15s ease',
                 padding: '2px 4px',
                 fontSize: '12px',
-                pointerEvents: 'none',
+                pointerEvents: 'auto',
+                cursor: (isDragging || isResizing) && annotation.id === selectedAnnotationId ? 'grabbing' : 'grab',
                 whiteSpace: 'nowrap'
               }}
+              onMouseDown={(e) => handleMouseDown(e, annotation.id)}
+              onMouseEnter={() => setHoveredAnnotationId(annotation.id)}
+              onMouseLeave={() => setHoveredAnnotationId(null)}
             >
               {annotation.type === 'text' || annotation.type === 'date' 
                 ? annotation.content 
                 : annotation.type === 'signature' 
-                ? (annotation.pngDataUrl ? <img src={annotation.pngDataUrl} alt="signature" style={{width: '100px', height: '50px'}} /> : '[signature]')
+                ? (annotation.pngDataUrl ? <img src={annotation.pngDataUrl} alt="signature" style={{width: `${annotation.widthPdf || 100}px`, height: `${annotation.heightPdf || 50}px`}} /> : '[signature]')
                 : annotation.type === 'check' 
                 ? '✓' 
                 : `[${annotation.type}]`}
+              {/* Selection handles - only for signatures which can be resized */}
+              {annotation.id === selectedAnnotationId && !isDragging && !isResizing && annotation.type === 'signature' && (
+                <>
+                  <div style={{
+                    position: 'absolute',
+                    width: '8px',
+                    height: '8px',
+                    backgroundColor: '#2196F3',
+                    border: '1px solid white',
+                    borderRadius: '50%',
+                    top: '-4px',
+                    left: '-4px',
+                    cursor: 'nw-resize',
+                    pointerEvents: 'auto'
+                  }} 
+                  onMouseDown={(e) => handleResizeStart(e, 'nw')}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    width: '8px',
+                    height: '8px',
+                    backgroundColor: '#2196F3',
+                    border: '1px solid white',
+                    borderRadius: '50%',
+                    top: '-4px',
+                    right: '-4px',
+                    cursor: 'ne-resize',
+                    pointerEvents: 'auto'
+                  }}
+                  onMouseDown={(e) => handleResizeStart(e, 'ne')}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    width: '8px',
+                    height: '8px',
+                    backgroundColor: '#2196F3',
+                    border: '1px solid white',
+                    borderRadius: '50%',
+                    bottom: '-4px',
+                    left: '-4px',
+                    cursor: 'sw-resize',
+                    pointerEvents: 'auto'
+                  }}
+                  onMouseDown={(e) => handleResizeStart(e, 'sw')}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    width: '8px',
+                    height: '8px',
+                    backgroundColor: '#2196F3',
+                    border: '1px solid white',
+                    borderRadius: '50%',
+                    bottom: '-4px',
+                    right: '-4px',
+                    cursor: 'se-resize',
+                    pointerEvents: 'auto'
+                  }}
+                  onMouseDown={(e) => handleResizeStart(e, 'se')}
+                  />
+                </>
+              )}
             </div>
           );
         })}
