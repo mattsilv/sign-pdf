@@ -161,7 +161,6 @@ function App() {
               onSignatureCreate={setSignatureDataUrl}
               onToolSelect={setSelectedTool}
               selectedTool={selectedTool}
-              onClearAnnotations={handleClearAnnotations}
               onResetDocument={handleResetDocument}
               onExportPdf={handleExportPdf}
               hasAnnotations={annotations.length > 0}
