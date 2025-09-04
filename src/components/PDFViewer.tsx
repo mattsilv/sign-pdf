@@ -255,39 +255,68 @@ export function PDFViewer({
   useEffect(() => {
     if (!isDragging || !dragStart || !selectedAnnotationId || !viewport) return;
     
-    const handleMouseMove = (event: MouseEvent) => {
+    // Track the latest mouse position without animation frame
+    let latestMouseX = dragStart.x;
+    let latestMouseY = dragStart.y;
+    let animationFrameId: number | null = null;
+    
+    const updatePosition = () => {
       const rect = canvasRef.current!.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      
-      const mapper = new CoordinateMapper(viewport);
+      const x = latestMouseX - rect.left;
+      const y = latestMouseY - rect.top;
       
       // Calculate delta in CSS coordinates
       const deltaX = x - dragStart.x;
       const deltaY = y - dragStart.y;
       
       // Convert delta to PDF coordinates
-      // Note: We need to handle the scale factor properly
       const deltaPdfX = deltaX / viewport.scale;
       const deltaPdfY = -deltaY / viewport.scale; // Negative because PDF Y is inverted
       
-      // Update annotation position
+      // Update annotation position immediately
       onAnnotationUpdate(selectedAnnotationId, {
         xPdf: dragStart.origXPdf + deltaPdfX,
         yPdf: dragStart.origYPdf + deltaPdfY
       });
+      
+      // Continue animation if still dragging
+      if (isDragging) {
+        animationFrameId = requestAnimationFrame(updatePosition);
+      }
+    };
+    
+    const handleMouseMove = (event: MouseEvent) => {
+      // Update the latest position immediately
+      latestMouseX = event.clientX;
+      latestMouseY = event.clientY;
+      
+      // Start animation loop if not already running
+      if (!animationFrameId) {
+        animationFrameId = requestAnimationFrame(updatePosition);
+      }
     };
     
     const handleMouseUp = () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
       setIsDragging(false);
       setDragStart(null);
     };
     
-    document.addEventListener('mousemove', handleMouseMove);
+    // Start the animation loop
+    animationFrameId = requestAnimationFrame(updatePosition);
+    
+    // Add with passive: false and capture: true for better responsiveness
+    document.addEventListener('mousemove', handleMouseMove, { passive: false, capture: true });
     document.addEventListener('mouseup', handleMouseUp);
     
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      document.removeEventListener('mousemove', handleMouseMove, { capture: true });
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging, dragStart, selectedAnnotationId, viewport, onAnnotationUpdate]);

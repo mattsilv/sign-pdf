@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SignaturePadModal } from './SignaturePad';
+
+const STORAGE_KEY = 'pdfSigner_signature';
 
 interface ToolPanelProps {
   onSignatureCreate: (dataUrl: string) => void;
@@ -25,10 +27,31 @@ export function ToolPanel({
   signatureDataUrl
 }: ToolPanelProps) {
   const [isSignaturePadOpen, setIsSignaturePadOpen] = useState(false);
+  const [hasStoredSignature, setHasStoredSignature] = useState(false);
+
+  // Check for stored signature on mount and when signatureDataUrl changes
+  useEffect(() => {
+    const checkStoredSignature = () => {
+      try {
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        setHasStoredSignature(!!storedData || !!signatureDataUrl);
+      } catch (error) {
+        console.error('Error checking stored signature:', error);
+        setHasStoredSignature(!!signatureDataUrl);
+      }
+    };
+
+    checkStoredSignature();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', checkStoredSignature);
+    return () => window.removeEventListener('storage', checkStoredSignature);
+  }, [signatureDataUrl]);
 
   const handleSignatureSave = (dataUrl: string) => {
     onSignatureCreate(dataUrl);
     onToolSelect('signature');
+    setHasStoredSignature(true);
   };
 
   const tools = [
@@ -49,7 +72,40 @@ export function ToolPanel({
               className={`tool-button ${selectedTool === tool.id ? 'active' : ''}`}
               onClick={() => {
                 if (tool.id === 'signature') {
-                  setIsSignaturePadOpen(true);
+                  // If signature exists (either in memory or localStorage), just select the tool
+                  if (hasStoredSignature) {
+                    onToolSelect('signature');
+                    // Load the signature if needed
+                    if (!signatureDataUrl) {
+                      const storedData = localStorage.getItem(STORAGE_KEY);
+                      if (storedData) {
+                        const parsed = JSON.parse(storedData);
+                        
+                        // Check if we have a dataUrl or need to generate one from text
+                        if (parsed.mode === 'draw' && parsed.data) {
+                          // For drawn signatures, data is the dataUrl
+                          onSignatureCreate(parsed.data);
+                        } else if (parsed.mode === 'type' && parsed.data) {
+                          // For typed signatures, data is the text - need to convert to image
+                          const canvas = document.createElement('canvas');
+                          const ctx = canvas.getContext('2d');
+                          if (ctx) {
+                            canvas.width = 640;
+                            canvas.height = 240;
+                            ctx.fillStyle = 'black';
+                            ctx.font = 'italic 96px "Brush Script MT", "Lucida Handwriting", "Apple Chancery", cursive';
+                            ctx.textBaseline = 'middle';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(parsed.data, canvas.width / 2, canvas.height / 2);
+                            const dataUrl = canvas.toDataURL('image/png');
+                            onSignatureCreate(dataUrl);
+                          }
+                        }
+                      }
+                    }
+                  } else {
+                    setIsSignaturePadOpen(true);
+                  }
                 } else {
                   onToolSelect(tool.id);
                 }
@@ -59,15 +115,6 @@ export function ToolPanel({
               <span className="tool-label">{tool.label}</span>
             </button>
           ))}
-          {signatureDataUrl && (
-            <button
-              className="tool-button edit-signature"
-              onClick={() => setIsSignaturePadOpen(true)}
-            >
-              <span className="tool-icon">✎️</span>
-              <span className="tool-label">Edit Signature</span>
-            </button>
-          )}
         </div>
 
         <div className="tool-actions">
@@ -115,6 +162,24 @@ export function ToolPanel({
             </svg>
             Start Over
           </button>
+          {hasStoredSignature && (
+            <button 
+              className="edit-signature-link compact"
+              onClick={() => setIsSignaturePadOpen(true)}
+              style={{
+                background: 'transparent',
+                color: '#2563eb',
+                border: 'none',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                padding: '0.25rem 0.5rem',
+                marginLeft: '0.5rem'
+              }}
+            >
+              Edit Signature
+            </button>
+          )}
         </div>
       </div>
 

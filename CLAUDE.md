@@ -1,5 +1,11 @@
 # GitHub Commands for sign-pdf Repository
 
+## IMPORTANT: Testing Requirements
+**Always test UI enhancements using Playwright before confirming they work** - Use browser automation to verify that changes function correctly end-to-end
+
+## Project Structure
+**Keep the root directory clean** - Place docs in `docs/`, tests in `tests/`, and only keep essential configs in root (see `docs/PROJECT_STRUCTURE.md`)
+
 ## GitHub CLI Issue Management
 ```bash
 # Create new issue
