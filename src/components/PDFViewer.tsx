@@ -3,6 +3,7 @@ import { loadPdfDocument, renderPage } from '../lib/pdf/viewer';
 import { CoordinateMapper } from '../lib/pdf/coordinates';
 import { Annotation } from '../lib/types';
 import { TextInputModal } from './TextInputModal';
+import type { PDFDocumentProxy, PageViewport } from 'pdfjs-dist';
 
 interface PDFViewerProps {
   file: File | null;
@@ -35,8 +36,8 @@ export function PDFViewer({
 }: PDFViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [viewport, setViewport] = useState<any>(null);
+  const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
+  const [viewport, setViewport] = useState<PageViewport | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [textModalOpen, setTextModalOpen] = useState(false);
   const [pendingTextAnnotation, setPendingTextAnnotation] = useState<{xPdf: number, yPdf: number, pageIndex: number} | null>(null);
@@ -251,68 +252,55 @@ export function PDFViewer({
     });
   };
   
-  // Handle mouse move for dragging
+  // Handle mouse move for dragging - Direct approach without continuous RAF
   useEffect(() => {
     if (!isDragging || !dragStart || !selectedAnnotationId || !viewport) return;
     
-    // Track the latest mouse position in canvas-relative coordinates
-    let latestMouseX = dragStart.x;
-    let latestMouseY = dragStart.y;
-    let animationFrameId: number | null = null;
+    // Track last position to prevent redundant updates
+    let lastUpdateX = dragStart.origXPdf;
+    let lastUpdateY = dragStart.origYPdf;
     
-    const updatePosition = () => {
-      // Calculate delta in CSS coordinates
-      const deltaX = latestMouseX - dragStart.x;
-      const deltaY = latestMouseY - dragStart.y;
+    const handleMouseMove = (event: MouseEvent) => {
+      // Convert client coordinates to canvas-relative coordinates
+      const rect = canvasRef.current!.getBoundingClientRect();
+      const currentX = event.clientX - rect.left;
+      const currentY = event.clientY - rect.top;
+      
+      // Calculate delta in canvas coordinates
+      const deltaX = currentX - dragStart.x;
+      const deltaY = currentY - dragStart.y;
       
       // Convert delta to PDF coordinates
       const deltaPdfX = deltaX / viewport.scale;
       const deltaPdfY = -deltaY / viewport.scale; // Negative because PDF Y is inverted
       
-      // Update annotation position immediately
-      onAnnotationUpdate(selectedAnnotationId, {
-        xPdf: dragStart.origXPdf + deltaPdfX,
-        yPdf: dragStart.origYPdf + deltaPdfY
-      });
+      // Calculate new position
+      const newXPdf = dragStart.origXPdf + deltaPdfX;
+      const newYPdf = dragStart.origYPdf + deltaPdfY;
       
-      // Continue animation if still dragging
-      if (isDragging) {
-        animationFrameId = requestAnimationFrame(updatePosition);
-      }
-    };
-    
-    const handleMouseMove = (event: MouseEvent) => {
-      // Convert client coordinates to canvas-relative coordinates
-      const rect = canvasRef.current!.getBoundingClientRect();
-      latestMouseX = event.clientX - rect.left;
-      latestMouseY = event.clientY - rect.top;
-      
-      // Start animation loop if not already running
-      if (!animationFrameId) {
-        animationFrameId = requestAnimationFrame(updatePosition);
+      // Only update if position has actually changed (prevent redundant updates)
+      if (Math.abs(newXPdf - lastUpdateX) > 0.1 || Math.abs(newYPdf - lastUpdateY) > 0.1) {
+        lastUpdateX = newXPdf;
+        lastUpdateY = newYPdf;
+        
+        // Update annotation position directly on mouse move
+        onAnnotationUpdate(selectedAnnotationId, {
+          xPdf: newXPdf,
+          yPdf: newYPdf
+        });
       }
     };
     
     const handleMouseUp = () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-      }
       setIsDragging(false);
       setDragStart(null);
     };
-    
-    // Start the animation loop
-    animationFrameId = requestAnimationFrame(updatePosition);
     
     // Add event listeners
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     
     return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
