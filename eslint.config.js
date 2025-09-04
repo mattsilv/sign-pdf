@@ -5,7 +5,15 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  { 
+    ignores: [
+      'dist',
+      'public/pdf.worker.min.mjs',
+      'tests/**/*.js',
+      '**/*.spec.js',
+      '.playwright-mcp/**/*'
+    ] 
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

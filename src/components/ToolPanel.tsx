@@ -7,7 +7,6 @@ interface ToolPanelProps {
   onSignatureCreate: (dataUrl: string) => void;
   onToolSelect: (tool: 'text' | 'signature' | 'check' | 'date') => void;
   selectedTool: string;
-  onClearAnnotations: () => void;
   onResetDocument: () => void;
   onExportPdf: () => void;
   hasAnnotations: boolean;
@@ -19,7 +18,6 @@ export function ToolPanel({
   onSignatureCreate, 
   onToolSelect, 
   selectedTool, 
-  onClearAnnotations, 
   onResetDocument, 
   onExportPdf, 
   hasAnnotations, 
