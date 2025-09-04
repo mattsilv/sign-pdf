@@ -1,0 +1,332 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+.app {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.app-header {
+  background: white;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+.app-header h1 {
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+.app-header p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.app-main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.file-upload {
+  text-align: center;
+  padding: 4rem 2rem;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background: white;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-label {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: #2563eb;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.file-label:hover {
+  background: #1d4ed8;
+}
+
+.pdf-viewer {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.page-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.page-nav button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.page-nav button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.page-nav button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pdf-container {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.pdf-container canvas {
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.zoom-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.zoom-controls button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.zoom-controls button:hover {
+  background: #f0f0f0;
+}
+
+.annotations-panel {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.annotations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.annotations-panel h3 {
+  margin: 0;
+  color: #333;
+}
+
+.export-button {
+  padding: 0.75rem 1.5rem;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.export-button:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.export-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.annotations-panel ul {
+  list-style: none;
+}
+
+.annotations-panel li {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+/* Tool Panel */
+.tool-panel {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+}
+
+.tool-panel h3 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.tool-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tool-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.tool-button:hover {
+  border-color: #2563eb;
+  background: #f8fafc;
+}
+
+.tool-button.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.tool-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.tool-label {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Signature Modal */
+.signature-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.signature-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.signature-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.signature-modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-canvas-container {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.signature-canvas {
+  display: block;
+  width: 100%;
+  height: 200px;
+  cursor: crosshair;
+}
+
+.signature-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.signature-modal-actions button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.signature-modal-actions button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.save-button {
+  background: #2563eb !important;
+  color: white !important;
+  border-color: #2563eb !important;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #1d4ed8 !important;
+}
+
+.save-button:disabled {
+  background: #9ca3af !important;
+  border-color: #9ca3af !important;
+  cursor: not-allowed;
+}
