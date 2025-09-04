@@ -166,6 +166,7 @@ function App() {
               onExportPdf={handleExportPdf}
               hasAnnotations={annotations.length > 0}
               isExporting={isExporting}
+              signatureDataUrl={signatureDataUrl}
             />
             <PDFViewer
               file={file}

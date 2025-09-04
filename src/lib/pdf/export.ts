@@ -44,8 +44,8 @@ export async function stampPdf(
     for (const item of items) {
       if (item.type === "signature" && item.pngDataUrl) {
         const png = await pdfDoc.embedPng(item.pngDataUrl);
-        const width = item.widthPdf || 100;
-        const height = item.heightPdf || 50;
+        const width = item.widthPdf || 160;
+        const height = item.heightPdf || 60;
         
         // CRITICAL FIX: Center the signature on the click point
         // The UI shows the signature centered on the click point,

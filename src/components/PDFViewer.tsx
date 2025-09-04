@@ -110,8 +110,8 @@ export function PDFViewer({
       let offsetY = 0;
       
       if (ann.type === 'signature') {
-        hitWidth = ann.widthPdf || 100;
-        hitHeight = ann.heightPdf || 50;
+        hitWidth = ann.widthPdf || 160;
+        hitHeight = ann.heightPdf || 60;
         offsetX = -hitWidth / 2;
         offsetY = -hitHeight / 2;
       } else if (ann.type === 'text' || ann.type === 'date') {
@@ -181,8 +181,8 @@ export function PDFViewer({
         ...baseAnnotation,
         type: 'signature' as const,
         pngDataUrl: signatureDataUrl,
-        widthPdf: 100,
-        heightPdf: 50,
+        widthPdf: 160,
+        heightPdf: 60,
       });
     } else if (selectedTool === 'text') {
       // Store the pending annotation and open modal
@@ -246,8 +246,8 @@ export function PDFViewer({
       handle,
       x,
       y,
-      origWidth: annotation.widthPdf || 100,
-      origHeight: annotation.heightPdf || 50
+      origWidth: annotation.widthPdf || 160,
+      origHeight: annotation.heightPdf || 60
     });
   };
   
@@ -463,7 +463,7 @@ export function PDFViewer({
               {annotation.type === 'text' || annotation.type === 'date' 
                 ? annotation.content 
                 : annotation.type === 'signature' 
-                ? (annotation.pngDataUrl ? <img src={annotation.pngDataUrl} alt="signature" style={{width: `${annotation.widthPdf || 100}px`, height: `${annotation.heightPdf || 50}px`}} /> : '[signature]')
+                ? (annotation.pngDataUrl ? <img src={annotation.pngDataUrl} alt="signature" style={{width: `${annotation.widthPdf || 160}px`, height: `${annotation.heightPdf || 60}px`}} /> : '[signature]')
                 : annotation.type === 'check' 
                 ? '✓' 
                 : `[${annotation.type}]`}

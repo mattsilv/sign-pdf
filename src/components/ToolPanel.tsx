@@ -10,6 +10,7 @@ interface ToolPanelProps {
   onExportPdf: () => void;
   hasAnnotations: boolean;
   isExporting: boolean;
+  signatureDataUrl: string | null;
 }
 
 export function ToolPanel({ 
@@ -20,7 +21,8 @@ export function ToolPanel({
   onResetDocument, 
   onExportPdf, 
   hasAnnotations, 
-  isExporting 
+  isExporting,
+  signatureDataUrl
 }: ToolPanelProps) {
   const [isSignaturePadOpen, setIsSignaturePadOpen] = useState(false);
 
@@ -57,6 +59,15 @@ export function ToolPanel({
               <span className="tool-label">{tool.label}</span>
             </button>
           ))}
+          {signatureDataUrl && (
+            <button
+              className="tool-button edit-signature"
+              onClick={() => setIsSignaturePadOpen(true)}
+            >
+              <span className="tool-icon">✎️</span>
+              <span className="tool-label">Edit Signature</span>
+            </button>
+          )}
         </div>
 
         <div className="tool-actions">
@@ -66,6 +77,21 @@ export function ToolPanel({
               onClick={onExportPdf}
               disabled={isExporting}
             >
+              <svg 
+                className="button-icon" 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
               {isExporting ? 'Exporting...' : 'Export PDF'}
             </button>
           )}
@@ -73,6 +99,20 @@ export function ToolPanel({
             className="reset-document-button compact"
             onClick={onResetDocument}
           >
+            <svg 
+              className="button-icon" 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
             Start Over
           </button>
         </div>
@@ -82,6 +122,7 @@ export function ToolPanel({
         isOpen={isSignaturePadOpen}
         onClose={() => setIsSignaturePadOpen(false)}
         onSave={handleSignatureSave}
+        existingSignature={signatureDataUrl}
       />
     </div>
   );
