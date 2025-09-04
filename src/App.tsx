@@ -51,6 +51,25 @@ function App() {
     }
   };
 
+  const handleClearAnnotations = () => {
+    if (annotations.length > 0) {
+      const confirmed = window.confirm('Are you sure you want to clear all annotations?');
+      if (confirmed) {
+        setAnnotations([]);
+      }
+    }
+  };
+
+  const handleResetDocument = () => {
+    const confirmed = window.confirm('Are you sure you want to start over? This will remove the document and all annotations.');
+    if (confirmed) {
+      setFile(null);
+      setAnnotations([]);
+      setCurrentPage(1);
+      setSignatureDataUrl(null);
+    }
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -78,6 +97,11 @@ function App() {
               onSignatureCreate={setSignatureDataUrl}
               onToolSelect={setSelectedTool}
               selectedTool={selectedTool}
+              onClearAnnotations={handleClearAnnotations}
+              onResetDocument={handleResetDocument}
+              onExportPdf={handleExportPdf}
+              hasAnnotations={annotations.length > 0}
+              isExporting={isExporting}
             />
             <PDFViewer
               file={file}
