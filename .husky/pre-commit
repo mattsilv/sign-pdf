@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# Run lint-staged for code quality checks
+npx lint-staged
+
+# Check if dev server is running
+if ! curl -s http://localhost:5174 > /dev/null 2>&1; then
+  echo "⚠️  Dev server not running. Starting it for tests..."
+  npm run dev &
+  DEV_PID=$!
+  
+  # Wait for server to be ready (max 15 seconds)
+  echo "Waiting for dev server..."
+  for i in $(seq 1 15); do
+    if curl -s http://localhost:5174 > /dev/null 2>&1; then
+      echo "Dev server ready!"
+      break
+    fi
+    sleep 1
+  done
+fi
+
+# Run E2E tests - only the pre-commit validation suite
+echo "🧪 Running pre-commit tests..."
+npm run test -- tests/e2e/signature-workflows.spec.js --grep "Pre-commit" --reporter=dot --timeout=30000
+
+TEST_RESULT=$?
+
+# Kill dev server if we started it
+if [ ! -z "$DEV_PID" ]; then
+  echo "Stopping dev server..."
+  kill $DEV_PID 2>/dev/null
+fi
+
+# Exit with test result
+if [ $TEST_RESULT -ne 0 ]; then
+  echo "❌ E2E tests failed. Please fix issues before committing."
+  exit 1
+fi
+
+echo "✅ All checks passed!"
+exit 0

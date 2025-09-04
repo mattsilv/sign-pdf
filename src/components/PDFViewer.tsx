@@ -255,19 +255,15 @@ export function PDFViewer({
   useEffect(() => {
     if (!isDragging || !dragStart || !selectedAnnotationId || !viewport) return;
     
-    // Track the latest mouse position without animation frame
+    // Track the latest mouse position in canvas-relative coordinates
     let latestMouseX = dragStart.x;
     let latestMouseY = dragStart.y;
     let animationFrameId: number | null = null;
     
     const updatePosition = () => {
-      const rect = canvasRef.current!.getBoundingClientRect();
-      const x = latestMouseX - rect.left;
-      const y = latestMouseY - rect.top;
-      
       // Calculate delta in CSS coordinates
-      const deltaX = x - dragStart.x;
-      const deltaY = y - dragStart.y;
+      const deltaX = latestMouseX - dragStart.x;
+      const deltaY = latestMouseY - dragStart.y;
       
       // Convert delta to PDF coordinates
       const deltaPdfX = deltaX / viewport.scale;
@@ -286,9 +282,10 @@ export function PDFViewer({
     };
     
     const handleMouseMove = (event: MouseEvent) => {
-      // Update the latest position immediately
-      latestMouseX = event.clientX;
-      latestMouseY = event.clientY;
+      // Convert client coordinates to canvas-relative coordinates
+      const rect = canvasRef.current!.getBoundingClientRect();
+      latestMouseX = event.clientX - rect.left;
+      latestMouseY = event.clientY - rect.top;
       
       // Start animation loop if not already running
       if (!animationFrameId) {
@@ -308,15 +305,15 @@ export function PDFViewer({
     // Start the animation loop
     animationFrameId = requestAnimationFrame(updatePosition);
     
-    // Add with passive: false and capture: true for better responsiveness
-    document.addEventListener('mousemove', handleMouseMove, { passive: false, capture: true });
+    // Add event listeners
+    document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     
     return () => {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
-      document.removeEventListener('mousemove', handleMouseMove, { capture: true });
+      document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging, dragStart, selectedAnnotationId, viewport, onAnnotationUpdate]);
@@ -492,7 +489,7 @@ export function PDFViewer({
               {annotation.type === 'text' || annotation.type === 'date' 
                 ? annotation.content 
                 : annotation.type === 'signature' 
-                ? (annotation.pngDataUrl ? <img src={annotation.pngDataUrl} alt="signature" style={{width: `${annotation.widthPdf || 160}px`, height: `${annotation.heightPdf || 60}px`}} /> : '[signature]')
+                ? (annotation.pngDataUrl ? <img src={annotation.pngDataUrl} alt="signature" style={{width: `${annotation.widthPdf || 160}px`, height: `${annotation.heightPdf || 60}px`, pointerEvents: 'none', userSelect: 'none'}} /> : '[signature]')
                 : annotation.type === 'check' 
                 ? '✓' 
                 : `[${annotation.type}]`}

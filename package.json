@@ -11,7 +11,8 @@
     "postinstall": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed"
+    "test:headed": "playwright test --headed",
+    "prepare": "husky"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
@@ -31,11 +32,19 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.6",
     "typescript": "^5.6.2",
+    "typescript-eslint": "^8.42.0",
     "vite": "^7.1.4",
     "wrangler": "^4.33.2"
   },
   "engines": {
     "node": ">=20.19"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ]
   }
 }
