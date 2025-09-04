@@ -15,6 +15,7 @@ function App() {
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
+  const [isLoadingSample, setIsLoadingSample] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -22,6 +23,23 @@ function App() {
       setFile(selectedFile);
       setAnnotations([]);
       setCurrentPage(1);
+    }
+  };
+
+  const loadSampleDocument = async () => {
+    setIsLoadingSample(true);
+    try {
+      const response = await fetch('/sample-signed-nda.pdf');
+      const blob = await response.blob();
+      const sampleFile = new File([blob], 'sample-signed-nda.pdf', { type: 'application/pdf' });
+      setFile(sampleFile);
+      setAnnotations([]);
+      setCurrentPage(1);
+    } catch (error) {
+      console.error('Failed to load sample document:', error);
+      alert('Failed to load sample document. Please try uploading your own PDF.');
+    } finally {
+      setIsLoadingSample(false);
     }
   };
 
@@ -97,17 +115,32 @@ function App() {
 
       <main className="app-main">
         {!file ? (
-          <div className="file-upload">
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              id="pdf-input"
-              className="file-input"
-            />
-            <label htmlFor="pdf-input" className="file-label">
-              Choose PDF File
-            </label>
+          <div className="file-upload-container">
+            <div className="file-upload">
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+                id="pdf-input"
+                className="file-input"
+              />
+              <label htmlFor="pdf-input" className="file-label">
+                Select PDF from your computer
+              </label>
+            </div>
+            <div className="sample-document-section">
+              <p className="or-divider">— or —</p>
+              <button 
+                className="sample-document-link"
+                onClick={loadSampleDocument}
+                disabled={isLoadingSample}
+              >
+                {isLoadingSample ? 'Loading...' : 'Try with Sample NDA Document'}
+              </button>
+              <p className="sample-description">
+                Test the tool with a pre-signed mutual NDA document
+              </p>
+            </div>
           </div>
         ) : (
           <>

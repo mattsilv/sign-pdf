@@ -41,6 +41,11 @@ body {
   align-items: center;
 }
 
+.file-upload-container {
+  width: 100%;
+  max-width: 600px;
+}
+
 .file-upload {
   text-align: center;
   padding: 4rem 2rem;
@@ -48,7 +53,6 @@ body {
   border-radius: 8px;
   background: white;
   width: 100%;
-  max-width: 500px;
 }
 
 .file-input {
@@ -68,6 +72,47 @@ body {
 
 .file-label:hover {
   background: #1d4ed8;
+}
+
+.sample-document-section {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.or-divider {
+  color: #999;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+.sample-document-link {
+  background: transparent;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.sample-document-link:hover:not(:disabled) {
+  background: #2563eb;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.sample-document-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sample-description {
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
 }
 
 .pdf-viewer {
