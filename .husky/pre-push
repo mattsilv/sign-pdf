@@ -1,0 +1,40 @@
+#!/bin/sh
+
+echo "🔨 Running pre-push checks..."
+
+# Try to build the project
+echo "📦 Building project..."
+npm run build
+
+if [ $? -ne 0 ]; then
+  echo "❌ Build failed! Please fix build errors before pushing."
+  exit 1
+fi
+
+# Run TypeScript type checking
+echo "🔍 Checking TypeScript types..."
+npx tsc --noEmit
+
+if [ $? -ne 0 ]; then
+  echo "❌ TypeScript type checking failed! Please fix type errors before pushing."
+  exit 1
+fi
+
+# Run linter
+echo "🧹 Running linter..."
+npm run lint
+
+if [ $? -ne 0 ]; then
+  echo "❌ Linting failed! Please fix lint errors before pushing."
+  exit 1
+fi
+
+# Check bundle size (warn if main bundle > 2MB)
+BUNDLE_SIZE=$(find dist/assets -name "*.js" -exec du -k {} \; | sort -n | tail -1 | cut -f1)
+if [ "$BUNDLE_SIZE" -gt 2048 ]; then
+  echo "⚠️  Warning: Main bundle is larger than 2MB ($BUNDLE_SIZE KB)"
+  echo "Consider code splitting to improve load performance"
+fi
+
+echo "✅ All pre-push checks passed!"
+exit 0

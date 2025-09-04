@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# Read the commit message
+commit_regex='^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,100}'
+commit_message=$(cat "$1")
+
+# Check if commit message follows conventional commits format
+if ! echo "$commit_message" | grep -qE "$commit_regex"; then
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Commit message must follow Conventional Commits format:"
+  echo "  <type>(<scope>): <subject>"
+  echo ""
+  echo "Types:"
+  echo "  feat:     New feature"
+  echo "  fix:      Bug fix"
+  echo "  docs:     Documentation changes"
+  echo "  style:    Code style changes (formatting, etc)"
+  echo "  refactor: Code refactoring"
+  echo "  test:     Test changes"
+  echo "  chore:    Build process or auxiliary tool changes"
+  echo "  perf:     Performance improvements"
+  echo "  ci:       CI/CD changes"
+  echo "  build:    Build system changes"
+  echo "  revert:   Revert a previous commit"
+  echo ""
+  echo "Example: feat(pdf): Add signature rotation feature"
+  echo ""
+  exit 1
+fi
+
+echo "✅ Commit message format is valid"
+exit 0
