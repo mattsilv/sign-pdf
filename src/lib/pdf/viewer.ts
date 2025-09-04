@@ -18,16 +18,22 @@ export async function renderPage(
 
   // Handle HiDPI
   const outputScale = window.devicePixelRatio || 1;
+  
+  // Set canvas dimensions
   canvas.width = Math.floor(viewport.width * outputScale);
   canvas.height = Math.floor(viewport.height * outputScale);
   canvas.style.width = `${viewport.width}px`;
   canvas.style.height = `${viewport.height}px`;
 
+  // Scale context for HiDPI if needed
+  if (outputScale !== 1) {
+    ctx.scale(outputScale, outputScale);
+  }
+
+  // Render the page
   await page.render({
     canvasContext: ctx,
     viewport,
-    transform:
-      outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null,
   }).promise;
 
   return viewport; // Return for coordinate mapping

@@ -128,11 +128,27 @@ export function PDFViewer({
         </div>
       )}
 
+      {/* Tool Instruction Message */}
+      {selectedTool === 'signature' && (
+        <div className="tool-instruction" style={{
+          textAlign: 'center',
+          margin: '10px 0',
+          padding: '8px 16px',
+          backgroundColor: '#e8f5e8',
+          border: '1px solid #4caf50',
+          borderRadius: '4px',
+          color: '#2e7d32',
+          fontSize: '14px'
+        }}>
+          Click into your PDF below to add your signature
+        </div>
+      )}
+
       {/* PDF Canvas with Overlay */}
       <div 
         ref={containerRef}
         className="pdf-container"
-        style={{ position: 'relative', display: 'inline-block' }}
+        style={{ position: 'relative' }}
       >
         <canvas
           ref={canvasRef}

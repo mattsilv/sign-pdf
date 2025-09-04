@@ -34,8 +34,11 @@ body {
 
 .app-main {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .file-upload {
@@ -44,6 +47,8 @@ body {
   border: 2px dashed #ccc;
   border-radius: 8px;
   background: white;
+  width: 100%;
+  max-width: 500px;
 }
 
 .file-input {
@@ -70,6 +75,8 @@ body {
   border-radius: 8px;
   padding: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 800px;
 }
 
 .page-nav {
@@ -97,14 +104,26 @@ body {
   cursor: not-allowed;
 }
 
+/* PDF Container - Controls PDF width and centering */
 .pdf-container {
-  text-align: center;
+  /* Center the PDF */
+  display: flex;
+  justify-content: center;
   margin: 1rem 0;
+  
+  /* Easy to edit: Change this to control PDF width */
+  width: 100%;
+  max-width: 600px; /* <-- Change this value to adjust PDF width */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .pdf-container canvas {
+  /* PDF styling */
   border: 1px solid #ddd;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 100%;
+  height: auto;
 }
 
 .zoom-controls {
@@ -135,6 +154,8 @@ body {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 800px;
 }
 
 .annotations-header {
@@ -187,6 +208,8 @@ body {
   padding: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   margin-bottom: 1rem;
+  width: 100%;
+  max-width: 800px;
 }
 
 .tool-panel h3 {
