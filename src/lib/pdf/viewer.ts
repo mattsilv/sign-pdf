@@ -3,15 +3,18 @@ import * as pdfjs from "pdfjs-dist";
 // Configure worker
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadPdfDocument(file: File): Promise<any> {
   const arrayBuffer = await file.arrayBuffer();
   return await pdfjs.getDocument({ data: arrayBuffer }).promise;
 }
 
 // Track current render task to cancel if needed
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let currentRenderTask: any = null;
 
 export async function renderPage(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   page: any,
   canvas: HTMLCanvasElement,
   scale: number
@@ -20,7 +23,7 @@ export async function renderPage(
   if (currentRenderTask) {
     try {
       currentRenderTask.cancel();
-    } catch (e) {
+    } catch {
       // Ignore cancellation errors
     }
     currentRenderTask = null;
@@ -58,9 +61,9 @@ export async function renderPage(
     // Wait for rendering to complete
     await currentRenderTask.promise;
     currentRenderTask = null;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If it's a cancellation error, ignore it
-    if (error?.name === 'RenderingCancelledException') {
+    if ((error as Error)?.name === 'RenderingCancelledException') {
       console.log('PDF rendering cancelled, starting new render');
     } else {
       console.error('PDF rendering error:', error);

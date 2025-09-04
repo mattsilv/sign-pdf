@@ -23,8 +23,11 @@
  * transformations correctly. The coordinates it returns can be used
  * directly with pdf-lib for perfect WYSIWYG alignment.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PDFViewport = any;
+
 export class CoordinateMapper {
-  constructor(private viewport: any) {}
+  constructor(private viewport: PDFViewport) {}
 
   /**
    * Convert CSS/Canvas coordinates to PDF points for storage
