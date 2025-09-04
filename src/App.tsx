@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { PDFViewer } from './components/PDFViewer';
 import { ToolPanel } from './components/ToolPanel';
+import { ConsentModal } from './components/ConsentModal';
 import { Annotation } from './lib/types';
-import { stampPdf } from './lib/pdf/export';
+import { stampPdfWithForensics } from './lib/pdf/forensics';
+import { ForensicsService } from './lib/forensics';
 import { savePdf } from './lib/pdf/save';
 import './App.css';
 
@@ -16,6 +18,8 @@ function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
   const [isLoadingSample, setIsLoadingSample] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [enableCompliance, setEnableCompliance] = useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -57,16 +61,86 @@ function App() {
   const handleExportPdf = async () => {
     if (!file || annotations.length === 0) return;
     
+    if (enableCompliance) {
+      // Show consent modal for compliant signing
+      setShowConsentModal(true);
+    } else {
+      // Simple export without forensic features
+      await handleSimpleExport();
+    }
+  };
+
+  const handleSimpleExport = async () => {
+    if (!file || annotations.length === 0) return;
+    
     setIsExporting(true);
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const signedPdfBytes = await stampPdf(arrayBuffer, annotations);
-      await savePdf(signedPdfBytes, `signed-${file.name}`);
+      
+      // Import the existing stamp function for simple PDF generation
+      const { stampPdf } = await import('./lib/pdf/export');
+      const stampedPdfBytes = await stampPdf(arrayBuffer, annotations);
+      
+      // Generate filename with today's date
+      const today = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+      }).replace(/\//g, '-');
+      
+      // Remove original extension and add date
+      const baseName = file.name.replace(/\.pdf$/i, '');
+      const filename = `${baseName}-${today}.pdf`;
+      
+      await savePdf(stampedPdfBytes, filename);
     } catch (error) {
       console.error('Export failed:', error);
       alert('Failed to export PDF. Please try again.');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleConsentGiven = async () => {
+    if (!file || annotations.length === 0) return;
+    
+    setIsExporting(true);
+    try {
+      const consentTimestamp = new Date().toISOString();
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Collect forensic data
+      const forensicData = await ForensicsService.collectForensicData(
+        arrayBuffer, 
+        consentTimestamp
+      );
+      
+      // Generate signed PDF with forensic page
+      const signedPdfBytes = await stampPdfWithForensics(
+        arrayBuffer, 
+        annotations, 
+        forensicData, 
+        file.name
+      );
+      
+      // Generate filename with today's date
+      const today = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+      }).replace(/\//g, '-');
+      
+      // Remove original extension and add date
+      const baseName = file.name.replace(/\.pdf$/i, '');
+      const filename = `${baseName}-signed-${today}.pdf`;
+      
+      await savePdf(signedPdfBytes, filename);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+      setShowConsentModal(false);
     }
   };
 
@@ -166,6 +240,8 @@ function App() {
               hasAnnotations={annotations.length > 0}
               isExporting={isExporting}
               signatureDataUrl={signatureDataUrl}
+              enableCompliance={enableCompliance}
+              onComplianceChange={setEnableCompliance}
             />
             <PDFViewer
               file={file}
@@ -193,7 +269,10 @@ function App() {
                 onClick={handleExportPdf}
                 disabled={isExporting}
               >
-                {isExporting ? 'Exporting...' : 'Export PDF'}
+                {isExporting 
+                  ? (enableCompliance ? 'Signing & Exporting...' : 'Exporting...')
+                  : (enableCompliance ? 'Sign & Export PDF' : 'Download PDF')
+                }
               </button>
             </div>
             <ul>
@@ -220,6 +299,27 @@ function App() {
           </div>
         )}
       </main>
+
+      <ConsentModal
+        isOpen={showConsentModal}
+        onClose={() => setShowConsentModal(false)}
+        onConsent={handleConsentGiven}
+        documentName={file?.name}
+      />
+
+      <footer className="app-footer">
+        <div className="legal-compliance-info">
+          <div className="compliance-badge">🔒 Optional ESIGN Act & UETA Compliance</div>
+          <p className="compliance-text">
+            When enabled, creates binding signatures with forensic browser fingerprint added to end of your PDF. By these methods combined with your email and the document, it should adhere to e-sign requirements. You must still manually email the PDF to recipient.
+          </p>
+          <p className="legal-disclaimer">
+            <strong>Not legal advice.</strong> This tool provides technical compliance features when enabled. 
+            Forensic information is only collected and added to the PDF if you check the compliance option. 
+            Consult with an attorney for legal guidance on your specific use case.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

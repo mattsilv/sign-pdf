@@ -12,6 +12,8 @@ interface ToolPanelProps {
   hasAnnotations: boolean;
   isExporting: boolean;
   signatureDataUrl: string | null;
+  enableCompliance: boolean;
+  onComplianceChange: (enabled: boolean) => void;
 }
 
 export function ToolPanel({ 
@@ -22,7 +24,9 @@ export function ToolPanel({
   onExportPdf, 
   hasAnnotations, 
   isExporting,
-  signatureDataUrl
+  signatureDataUrl,
+  enableCompliance,
+  onComplianceChange
 }: ToolPanelProps) {
   const [isSignaturePadOpen, setIsSignaturePadOpen] = useState(false);
   const [hasStoredSignature, setHasStoredSignature] = useState(false);
@@ -115,6 +119,20 @@ export function ToolPanel({
           ))}
         </div>
 
+        {hasAnnotations && (
+          <div className="compliance-checkbox-section">
+            <label className="compliance-checkbox-label">
+              <input
+                type="checkbox"
+                checked={enableCompliance}
+                onChange={(e) => onComplianceChange(e.target.checked)}
+                className="compliance-checkbox"
+              />
+              <span>Make e-sign compliant</span>
+            </label>
+          </div>
+        )}
+
         <div className="tool-actions">
           {hasAnnotations && (
             <button 
@@ -137,7 +155,10 @@ export function ToolPanel({
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              {isExporting ? 'Exporting...' : 'Export PDF'}
+              {isExporting 
+                ? (enableCompliance ? 'Signing & Exporting...' : 'Exporting...')
+                : (enableCompliance ? 'Sign & Export PDF' : 'Download PDF')
+              }
             </button>
           )}
           <button 
