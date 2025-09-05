@@ -1,7 +1,7 @@
 {
-  "name": "PDF Signer - Privacy First",
+  "name": "PDF Signer - Open Source Privacy-First PDF Signing",
   "short_name": "PDF Signer",
-  "description": "Privacy-first PDF signing - all processing happens in your browser",
+  "description": "Open-source, privacy-first PDF signing tool. Sign documents securely in your browser - no uploads, no servers, no tracking.",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
