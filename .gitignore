@@ -31,3 +31,30 @@ test-results/
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Private/local configuration
+CLAUDE.md
+.claude/
+
+# Planning and temporary files
+planning/
+*.tmp
+*.temp
+DRAG_PERFORMANCE_ISSUE.md
+ENGINEER_PRIMER_SIGNATURE_UI.md
+SIGNATURE_UI_ENHANCEMENTS_ISSUE.md
+TEST_INFRASTRUCTURE_IMPROVEMENTS.md
+
+# Personal data
+*.pdf
+!public/sample-nda.pdf
+coordinate_test.pdf
+
+# Wrangler/Cloudflare
+.wrangler/
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
