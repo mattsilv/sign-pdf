@@ -318,7 +318,8 @@ function App() {
           <blockquote className="testimonial-quote">
             <span className="quote-mark">"</span>
             <p className="quote-text">
-              Tried it out and downloaded the sample. Pretty nice. Better than Adobe imo.
+              Tried it out and downloaded the sample. Pretty nice.<br />
+              Better than Adobe® imo.
             </p>
             <span className="quote-mark closing">"</span>
           </blockquote>
@@ -335,14 +336,17 @@ function App() {
             When enabled, creates binding signatures with forensic browser fingerprint added to end of your PDF. By these methods combined with your email and the document, it should adhere to e-sign requirements. You must still manually email the PDF to recipient.
           </p>
           <p className="legal-disclaimer">
+            <br />
             <strong>*Not legal advice.</strong> This tool provides technical compliance features when enabled. 
             Forensic information is only collected and added to the PDF if you check the compliance option. 
             Consult with an attorney for legal guidance on your specific use case.
+            <br /><br />
+            Adobe® is a registered trademark of Adobe Inc.
           </p>
         </div>
         <div className="attribution">
           <a href="https://github.com/mattsilv/sign-pdf" target="_blank" rel="noopener noreferrer">
-            Open-source app
+            MIT licensed open-source app
           </a>
           {' '}for public good by{' '}
           <a href="https://www.silv.app" target="_blank" rel="noopener noreferrer">
