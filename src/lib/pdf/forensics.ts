@@ -1,5 +1,6 @@
 import { PDFDocument, PDFPage, rgb, StandardFonts, PDFFont } from "pdf-lib";
 import { ForensicData, ForensicsService } from "../forensics";
+import { Annotation } from '../types';
 
 export class ForensicPageGenerator {
   static async addForensicPage(
@@ -229,7 +230,7 @@ export class ForensicPageGenerator {
 // Enhanced export function that includes forensic page
 export async function stampPdfWithForensics(
   originalBytes: ArrayBuffer,
-  annotations: unknown[],
+  annotations: Annotation[],
   forensicData: ForensicData,
   originalFilename?: string
 ): Promise<Uint8Array> {

@@ -7,7 +7,8 @@ export async function savePdf(bytes: Uint8Array, filename = "signed.pdf") {
   console.log('Downloading PDF with filename:', filename);
 
   // Create blob directly from bytes
-  const blob = new Blob([bytes], { type: "application/pdf" });
+  // TypeScript doesn't properly recognize Uint8Array as BlobPart in some configurations
+  const blob = new Blob([bytes as ArrayBuffer], { type: "application/pdf" });
   
   // Create URL from blob
   const url = URL.createObjectURL(blob);

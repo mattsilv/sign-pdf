@@ -92,7 +92,7 @@ export class ForensicsService {
     let webglRenderer = 'unavailable';
     try {
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-      if (gl) {
+      if (gl && gl instanceof WebGLRenderingContext) {
         const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
         if (debugInfo) {
           webglVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'unknown';
@@ -225,7 +225,7 @@ export class ForensicsService {
     return `${timestamp}-${randomPart}`;
   }
 
-  static async hashDocument(buffer: ArrayBuffer): string {
+  static async hashDocument(buffer: ArrayBuffer): Promise<string> {
     try {
       const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
