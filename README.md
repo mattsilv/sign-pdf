@@ -89,6 +89,11 @@ This application is designed to deploy to Cloudflare Pages:
 2. Build settings are auto-detected (Vite)
 3. Deploy automatically on git push
 
+## 💬 What People Are Saying
+
+> "Tried it out and downloaded the sample. Pretty nice. Better than Adobe imo."  
+> — **A Real Attorney** *(not legal advice)*
+
 ## 🔒 Security
 
 - Content Security Policy headers configured

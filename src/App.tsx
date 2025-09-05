@@ -312,6 +312,22 @@ function App() {
         documentName={file?.name}
       />
 
+      {/* Testimonials Section */}
+      <section className="testimonials-section">
+        <div className="testimonial-card">
+          <blockquote className="testimonial-quote">
+            <span className="quote-mark">"</span>
+            <p className="quote-text">
+              Tried it out and downloaded the sample. Pretty nice. Better than Adobe imo.
+            </p>
+            <span className="quote-mark closing">"</span>
+          </blockquote>
+          <cite className="testimonial-author">
+            — A Real Attorney <span className="disclaimer">(not legal advice)</span>
+          </cite>
+        </div>
+      </section>
+
       <footer className="app-footer">
         <div className="legal-compliance-info">
           <div className="compliance-badge">🔒 Optional ESIGN Act & UETA Compliance</div>

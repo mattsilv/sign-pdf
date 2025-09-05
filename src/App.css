@@ -126,6 +126,66 @@ body {
   text-decoration: underline;
 }
 
+/* Testimonials Section */
+.testimonials-section {
+  background: linear-gradient(to bottom, #fafafa, #ffffff);
+  padding: 2rem 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.testimonial-card {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 0 1rem;
+}
+
+.testimonial-quote {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.quote-mark {
+  font-size: 2.5rem;
+  color: #e5e7eb;
+  font-family: Georgia, serif;
+  line-height: 1;
+  vertical-align: middle;
+  display: inline-block;
+  margin: 0 0.25rem;
+}
+
+.quote-mark.closing {
+  vertical-align: baseline;
+}
+
+.quote-text {
+  display: inline;
+  font-size: 1.1rem;
+  color: #4b5563;
+  font-style: italic;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.testimonial-author {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.testimonial-author .disclaimer {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-style: italic;
+  font-weight: normal;
+}
+
 .file-upload-container {
   width: 100%;
   max-width: 600px;
