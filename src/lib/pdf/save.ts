@@ -7,8 +7,10 @@ export async function savePdf(bytes: Uint8Array, filename = "signed.pdf") {
   console.log('Downloading PDF with filename:', filename);
 
   // Create blob directly from bytes
-  // Uint8Array is a valid BlobPart but TypeScript may complain in strict mode
-  const blob = new Blob([bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)], { type: "application/pdf" });
+  // Note: TypeScript's strict type checking may flag Uint8Array as incompatible with BlobPart
+  // in some configurations. This is safe as Uint8Array is a valid BlobPart.
+  const blobParts: BlobPart[] = [bytes as unknown as BlobPart];
+  const blob = new Blob(blobParts, { type: "application/pdf" });
   
   // Create URL from blob
   const url = URL.createObjectURL(blob);
