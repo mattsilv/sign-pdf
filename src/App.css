@@ -106,6 +106,26 @@ body {
   font-weight: 600;
 }
 
+.attribution {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.attribution a {
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.attribution a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
 .file-upload-container {
   width: 100%;
   max-width: 600px;

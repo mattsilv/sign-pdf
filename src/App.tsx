@@ -184,7 +184,12 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>PDF Signer</h1>
-        <p>Privacy-first PDF signing - all processing happens in your browser</p>
+        <p>
+          <a href="https://github.com/mattsilv/sign-pdf" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+            Open-source
+          </a>
+          {' '}privacy-first PDF signing - all processing happens in your browser
+        </p>
       </header>
 
       <main className="app-main">
@@ -318,6 +323,15 @@ function App() {
             Forensic information is only collected and added to the PDF if you check the compliance option. 
             Consult with an attorney for legal guidance on your specific use case.
           </p>
+        </div>
+        <div className="attribution">
+          <a href="https://github.com/mattsilv/sign-pdf" target="_blank" rel="noopener noreferrer">
+            Open-source app
+          </a>
+          {' '}for public good by{' '}
+          <a href="https://www.silv.app" target="_blank" rel="noopener noreferrer">
+            silv.app
+          </a>
         </div>
       </footer>
     </div>
