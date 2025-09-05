@@ -38,6 +38,7 @@ CLAUDE.md
 
 # Planning and temporary files
 planning/
+docs/
 *.tmp
 *.temp
 DRAG_PERFORMANCE_ISSUE.md
