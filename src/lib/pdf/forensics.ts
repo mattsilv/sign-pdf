@@ -7,20 +7,20 @@ export class ForensicPageGenerator {
     forensicData: ForensicData,
     originalFilename?: string
   ): Promise<PDFDocument> {
-    let page = pdfDoc.addPage();
+    const page = pdfDoc.addPage();
     const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     
     const { width, height } = page.getSize();
     const margin = 50;
-    const lineHeight = 16;
+    const lineHeight = 14;
     let y = height - margin;
     
     // Title
     page.drawText('ELECTRONIC SIGNATURE VERIFICATION', {
       x: margin,
       y: y,
-      size: 16,
+      size: 14,
       font: helveticaBold,
       color: rgb(0, 0, 0),
     });
@@ -34,116 +34,141 @@ export class ForensicPageGenerator {
       color: rgb(0, 0, 0),
     });
     
-    y -= 30;
+    y -= 25;
     
     // Document info section
-    const sections = [
-      {
-        title: 'DOCUMENT INFORMATION',
-        content: [
-          `Document: ${originalFilename || 'signed-document.pdf'}`,
-          `Document Hash (SHA-256): ${forensicData.documentHash}`,
-          `Signed: ${ForensicsService.formatTimestamp(forensicData.timestamp)}`,
-          `Signed at: https://sign.silv.app`,
-          `Session ID: ${forensicData.sessionId}`,
-          `Consent Given: ${ForensicsService.formatTimestamp(forensicData.consentTimestamp)}`,
-        ]
-      },
-      {
-        title: 'SYSTEM INFORMATION',
-        content: [
-          `Browser: ${forensicData.browserFingerprint.browserName} ${forensicData.browserFingerprint.browserVersion}`,
-          `Operating System: ${forensicData.browserFingerprint.operatingSystem} ${forensicData.browserFingerprint.osVersion}`,
-          `Platform: ${forensicData.browserFingerprint.platform}`,
-          `IP Address: ${forensicData.ipAddress || 'Not Available'}`,
-          `Timezone: ${forensicData.browserFingerprint.timezone}`,
-          `Language: ${forensicData.browserFingerprint.language}`,
-        ]
-      },
-      {
-        title: 'DEVICE & DISPLAY',
-        content: [
-          `Screen Resolution: ${forensicData.browserFingerprint.screenResolution}`,
-          `Color Depth: ${forensicData.browserFingerprint.colorDepth}-bit`,
-          `Available Screen: ${forensicData.browserFingerprint.availableScreenSize}`,
-          `Window Size: ${forensicData.browserFingerprint.windowSize}`,
-          `Hardware Cores: ${forensicData.browserFingerprint.hardwareConcurrency}`,
-          ...(forensicData.browserFingerprint.deviceMemory ? [`Device Memory: ${forensicData.browserFingerprint.deviceMemory}GB`] : []),
-          `Touch Points: ${forensicData.browserFingerprint.maxTouchPoints}`,
-        ]
-      },
-      {
-        title: 'FORENSIC FINGERPRINT',
-        content: [
-          `Unique Visitor ID: ${forensicData.visitorId}`,
-          `Canvas Fingerprint: ${this.truncateText(forensicData.browserFingerprint.canvasFingerprint, 60)}`,
-          `WebGL Vendor: ${forensicData.browserFingerprint.webglVendor}`,
-          `WebGL Renderer: ${this.truncateText(forensicData.browserFingerprint.webglRenderer, 60)}`,
-          `Connection Type: ${forensicData.browserFingerprint.connectionType}`,
-          `Plugins Detected: ${forensicData.browserFingerprint.pluginsCount}`,
-          `MIME Types: ${forensicData.browserFingerprint.mimeTypesCount}`,
-        ]
-      },
-      {
-        title: 'LEGAL COMPLIANCE',
-        content: [
-          '✓ ESIGN Act Compliant',
-          '✓ UETA Compliant',
-          '✓ User Consent Obtained',
-          '✓ Forensic Audit Trail Complete',
-          '✓ Document Integrity Verified',
-        ]
-      },
-      {
-        title: 'PRIVACY PROTECTION',
-        content: [
-          '✓ All processing performed locally in browser',
-          '✓ No data transmitted to or stored on servers',
-          '✓ Forensic information embedded in PDF only',
-          '✓ User maintains complete control of document',
-        ]
-      }
-    ];
+    const documentSection = {
+      title: 'DOCUMENT INFORMATION',
+      content: [
+        `Document: ${originalFilename || 'signed-document.pdf'}`,
+        `Document Hash (SHA-256): ${forensicData.documentHash}`,
+        `Signed: ${ForensicsService.formatTimestamp(forensicData.timestamp)}`,
+        `Signed at: https://sign.silv.app`,
+        `Session ID: ${forensicData.sessionId}`,
+        `Consent Given: ${ForensicsService.formatTimestamp(forensicData.consentTimestamp)}`,
+      ]
+    };
     
-    for (const section of sections) {
-      y = this.addSection(page, section.title, section.content, margin, y, lineHeight, helveticaBold, helvetica);
-      y -= 10; // Extra space between sections
-    }
+    const forensicSection = {
+      title: 'FORENSIC FINGERPRINT',
+      content: [
+        `Unique Visitor ID: ${forensicData.visitorId}`,
+        `Canvas Fingerprint: ${this.truncateText(forensicData.browserFingerprint.canvasFingerprint, 60)}`,
+        `Connection Type: ${forensicData.browserFingerprint.connectionType}`,
+        `Plugins Detected: ${forensicData.browserFingerprint.pluginsCount}`,
+        `MIME Types: ${forensicData.browserFingerprint.mimeTypesCount}`,
+      ]
+    };
     
-    // Legal notice
-    y -= 10;
-    const legalNotice = [
-      'This document was electronically signed using privacy-first technology.',
-      'All forensic data was collected with explicit user consent for legal',
-      'compliance purposes only.',
-      '',
-      `Document Hash (SHA-256): ${forensicData.documentHash}`,
-      'Generated by: PDF Signer - Privacy-First Electronic Signatures',
-      '',
-      'Legal Notice: This electronic signature complies with the Electronic',
-      'Signatures in Global and National Commerce (ESIGN) Act and the Uniform',
-      'Electronic Transactions Act (UETA). The embedded forensic information',
-      'provides technical evidence of signing authenticity and intent for',
-      'legal proceedings.',
-    ];
+    const systemSection = {
+      title: 'SYSTEM INFORMATION',
+      content: [
+        `Browser: ${forensicData.browserFingerprint.browserName} ${forensicData.browserFingerprint.browserVersion}`,
+        `Operating System: ${forensicData.browserFingerprint.operatingSystem} ${forensicData.browserFingerprint.osVersion}`,
+        `Platform: ${forensicData.browserFingerprint.platform}`,
+        `IP Address: ${forensicData.ipAddress || 'Not Available'}`,
+        `Timezone: ${forensicData.browserFingerprint.timezone}`,
+        `Language: ${forensicData.browserFingerprint.language}`,
+      ]
+    };
     
-    for (const line of legalNotice) {
-      if (y < margin + 50) {
-        // Not enough space, create new page
-        const newPage = pdfDoc.addPage();
-        y = newPage.getSize().height - margin;
-        page = newPage as PDFPage;
-      }
-      
+    const deviceSection = {
+      title: 'DEVICE & DISPLAY',
+      content: [
+        `Screen Resolution: ${forensicData.browserFingerprint.screenResolution}`,
+        `Color Depth: ${forensicData.browserFingerprint.colorDepth}-bit`,
+        `Available Screen: ${forensicData.browserFingerprint.availableScreenSize}`,
+        `Window Size: ${forensicData.browserFingerprint.windowSize}`,
+        `Hardware Cores: ${forensicData.browserFingerprint.hardwareConcurrency}`,
+        ...(forensicData.browserFingerprint.deviceMemory ? [`Device Memory: ${forensicData.browserFingerprint.deviceMemory}GB`] : []),
+      ]
+    };
+    
+    // Add Document Information section
+    y = this.addSection(page, documentSection.title, documentSection.content, margin, y, lineHeight, helveticaBold, helvetica);
+    y -= 8;
+    
+    // Add Forensic Fingerprint section
+    y = this.addSection(page, forensicSection.title, forensicSection.content, margin, y, lineHeight, helveticaBold, helvetica);
+    y -= 8;
+    
+    // Add System Information and Device & Display side by side
+    const columnWidth = (width - (margin * 2) - 20) / 2;
+    const leftX = margin;
+    const rightX = margin + columnWidth + 20;
+    
+    // Draw both section titles at the same height
+    const sideBySideY = y;
+    
+    // System Information (left column)
+    page.drawText(systemSection.title, {
+      x: leftX,
+      y: sideBySideY,
+      size: 11,
+      font: helveticaBold,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Device & Display (right column)
+    page.drawText(deviceSection.title, {
+      x: rightX,
+      y: sideBySideY,
+      size: 11,
+      font: helveticaBold,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Draw underlines
+    y = sideBySideY - 5;
+    page.drawLine({
+      start: { x: leftX, y: y },
+      end: { x: leftX + 180, y: y },
+      thickness: 1,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+    
+    page.drawLine({
+      start: { x: rightX, y: y },
+      end: { x: rightX + 180, y: y },
+      thickness: 1,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+    
+    y -= lineHeight;
+    
+    // Draw content for both columns
+    let leftY = y;
+    let rightY = y;
+    
+    // System Information content
+    for (const line of systemSection.content) {
       page.drawText(line, {
-        x: margin,
-        y: y,
-        size: 10,
+        x: leftX,
+        y: leftY,
+        size: 9,
         font: helvetica,
-        color: rgb(0.3, 0.3, 0.3),
+        color: rgb(0, 0, 0),
+        maxWidth: columnWidth,
       });
-      y -= 14;
+      leftY -= lineHeight;
     }
+    
+    // Device & Display content
+    for (const line of deviceSection.content) {
+      page.drawText(line, {
+        x: rightX,
+        y: rightY,
+        size: 9,
+        font: helvetica,
+        color: rgb(0, 0, 0),
+        maxWidth: columnWidth,
+      });
+      rightY -= lineHeight;
+    }
+    
+    // Set y to the lowest point
+    y = Math.min(leftY, rightY) - 8;
+    
     
     return pdfDoc;
   }
@@ -164,13 +189,13 @@ export class ForensicPageGenerator {
     page.drawText(title, {
       x: margin,
       y: y,
-      size: 12,
+      size: 11,
       font: boldFont,
       color: rgb(0, 0, 0),
     });
     
     // Underline
-    y -= 6;
+    y -= 5;
     page.drawLine({
       start: { x: margin, y: y },
       end: { x: margin + 200, y: y },
@@ -185,7 +210,7 @@ export class ForensicPageGenerator {
       page.drawText(line, {
         x: margin,
         y: y,
-        size: 10,
+        size: 9,
         font: regularFont,
         color: rgb(0, 0, 0),
       });

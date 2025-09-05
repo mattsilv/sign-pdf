@@ -314,7 +314,7 @@ function App() {
             When enabled, creates binding signatures with forensic browser fingerprint added to end of your PDF. By these methods combined with your email and the document, it should adhere to e-sign requirements. You must still manually email the PDF to recipient.
           </p>
           <p className="legal-disclaimer">
-            <strong>Not legal advice.</strong> This tool provides technical compliance features when enabled. 
+            <strong>*Not legal advice.</strong> This tool provides technical compliance features when enabled. 
             Forensic information is only collected and added to the PDF if you check the compliance option. 
             Consult with an attorney for legal guidance on your specific use case.
           </p>

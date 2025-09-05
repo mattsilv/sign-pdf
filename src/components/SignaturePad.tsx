@@ -146,7 +146,9 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
     }
   };
 
-  const handleClear = () => {
+
+  const handleClearAll = () => {
+    // Clear the current signature in UI
     if (mode === 'draw' && signaturePadRef.current) {
       signaturePadRef.current.clear();
       setIsEmpty(true);
@@ -154,13 +156,17 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
       setTypedSignature('');
       setIsEmpty(true);
     }
-    setHasUnsavedChanges(true);
-  };
-
-  const handleClearStorage = () => {
+    
+    // Clear from storage
     try {
       localStorage.removeItem(STORAGE_KEY);
       setSavedToStorage(false);
+      setHasUnsavedChanges(false);
+      
+      // Also clear from parent component if needed
+      if (onSave) {
+        onSave('');
+      }
     } catch (error) {
       console.error('Failed to clear storage:', error);
     }
@@ -257,7 +263,7 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
             <span className="storage-status">✓ Saved in browser</span>
             <button 
               className="clear-storage-link"
-              onClick={handleClearStorage}
+              onClick={handleClearAll}
               type="button"
             >
               Clear
@@ -266,7 +272,7 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
         )}
         
         <div className="signature-modal-actions">
-          <button onClick={handleClear}>Clear</button>
+          <button onClick={handleClearAll}>Clear</button>
           <button 
             onClick={handleSave} 
             disabled={checkIfEmpty()}

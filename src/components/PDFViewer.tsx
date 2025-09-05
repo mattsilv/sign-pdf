@@ -411,21 +411,21 @@ export function PDFViewer({
         </div>
       )}
 
-      {/* Tool Instruction Message */}
-      {selectedTool === 'signature' && (
-        <div className="tool-instruction" style={{
-          textAlign: 'center',
-          margin: '10px 0',
-          padding: '8px 16px',
-          backgroundColor: '#e8f5e8',
-          border: '1px solid #4caf50',
-          borderRadius: '4px',
-          color: '#2e7d32',
-          fontSize: '14px'
-        }}>
-          Click into your PDF below to add your signature
-        </div>
-      )}
+      {/* Tool Instruction Message - Always render to preserve layout */}
+      <div className="tool-instruction" style={{
+        textAlign: 'center',
+        margin: '10px 0',
+        padding: '8px 16px',
+        backgroundColor: selectedTool === 'signature' ? '#e8f5e8' : 'transparent',
+        border: selectedTool === 'signature' ? '1px solid #4caf50' : '1px solid transparent',
+        borderRadius: '4px',
+        color: selectedTool === 'signature' ? '#2e7d32' : 'transparent',
+        fontSize: '14px',
+        visibility: selectedTool === 'signature' ? 'visible' : 'hidden',
+        minHeight: '20px'
+      }}>
+        Click into your PDF below to add your signature
+      </div>
 
       {/* PDF Canvas with Overlay */}
       <div 
