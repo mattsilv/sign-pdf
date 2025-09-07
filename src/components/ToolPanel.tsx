@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SignaturePadModal } from './SignaturePad';
+import { SignaturePadLazy } from './SignaturePad.lazy';
 
 const STORAGE_KEY = 'pdfSigner_signature';
 
@@ -9,11 +9,14 @@ interface ToolPanelProps {
   selectedTool: string;
   onResetDocument: () => void;
   onExportPdf: () => void;
+  onExportHover?: () => void;
   hasAnnotations: boolean;
   isExporting: boolean;
   signatureDataUrl: string | null;
   enableCompliance: boolean;
   onComplianceChange: (enabled: boolean) => void;
+  currentScale: number;
+  onScaleChange: (scale: number) => void;
 }
 
 export function ToolPanel({ 
@@ -22,11 +25,14 @@ export function ToolPanel({
   selectedTool, 
   onResetDocument, 
   onExportPdf, 
+  onExportHover,
   hasAnnotations, 
   isExporting,
   signatureDataUrl,
   enableCompliance,
-  onComplianceChange
+  onComplianceChange,
+  currentScale,
+  onScaleChange
 }: ToolPanelProps) {
   const [isSignaturePadOpen, setIsSignaturePadOpen] = useState(false);
   const [hasStoredSignature, setHasStoredSignature] = useState(false);
@@ -144,9 +150,30 @@ export function ToolPanel({
           </div>
 
           <div className="tool-actions">
+            {/* Zoom Controls - Mobile Only */}
+            <div className="zoom-controls mobile-only">
+              <button 
+                className="zoom-button compact"
+                onClick={() => onScaleChange(Math.max(currentScale - 0.25, 0.5))}
+                disabled={currentScale <= 0.5}
+                aria-label="Zoom out"
+              >
+                −
+              </button>
+              <span className="zoom-display">{Math.round(currentScale * 100)}%</span>
+              <button 
+                className="zoom-button compact"
+                onClick={() => onScaleChange(Math.min(currentScale + 0.25, 5))}
+                disabled={currentScale >= 5}
+                aria-label="Zoom in"
+              >
+                +
+              </button>
+            </div>
             <button 
               className="export-button compact"
               onClick={onExportPdf}
+              onMouseEnter={onExportHover}
               disabled={!hasAnnotations || isExporting}
               style={{ opacity: hasAnnotations ? 1 : 0.5 }}
             >
@@ -208,7 +235,7 @@ export function ToolPanel({
 
       </div>
 
-      <SignaturePadModal
+      <SignaturePadLazy
         isOpen={isSignaturePadOpen}
         onClose={() => setIsSignaturePadOpen(false)}
         onSave={handleSignatureSave}

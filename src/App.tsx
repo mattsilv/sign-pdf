@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { PDFViewer } from './components/PDFViewer';
+import { VirtualizedPDFViewer } from './components/VirtualizedPDFViewer';
 import { ToolPanel } from './components/ToolPanel';
 import { ConsentModal } from './components/ConsentModal';
 import { CoordinateDebugger } from './components/CoordinateDebugger';
 import { Annotation } from './lib/types';
-import { stampPdfWithForensics } from './lib/pdf/forensics';
+// Forensics lazy loaded on demand to reduce initial bundle
 import { ForensicsService } from './lib/forensics';
 import { savePdf } from './lib/pdf/save';
 import './App.css';
@@ -23,6 +24,17 @@ function App() {
   const [isLoadingSample, setIsLoadingSample] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [enableCompliance, setEnableCompliance] = useState(false);
+  
+  // Feature flag: Enable virtualization for better performance with large PDFs
+  const useVirtualization = true; // Set to true to enable page virtualization
+
+  // Preload export dependencies when hovering export button
+  const handleExportHover = () => {
+    import('./lib/pdf/export.lazy');
+    if (enableCompliance) {
+      import('./lib/pdf/forensics.lazy');
+    }
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -86,10 +98,9 @@ function App() {
     try {
       const arrayBuffer = await file.arrayBuffer();
       
-      // Import the existing stamp function for simple PDF generation
-      // Fixed: No double anchor application in export
-      const { stampPdf } = await import('./lib/pdf/export');
-      const stampedPdfBytes = await stampPdf(arrayBuffer, annotations);
+      // Use lazy-loaded export to reduce initial bundle size
+      const { stampPdfLazy } = await import('./lib/pdf/export.lazy');
+      const stampedPdfBytes = await stampPdfLazy(arrayBuffer, annotations);
       
       // Generate filename with today's date
       const today = new Date().toLocaleDateString('en-US', { 
@@ -125,8 +136,9 @@ function App() {
         consentTimestamp
       );
       
-      // Generate signed PDF with forensic page
-      const signedPdfBytes = await stampPdfWithForensics(
+      // Generate signed PDF with forensic page (lazy-loaded)
+      const { stampPdfWithForensicsLazy } = await import('./lib/pdf/forensics.lazy');
+      const signedPdfBytes = await stampPdfWithForensicsLazy(
         arrayBuffer, 
         annotations, 
         forensicData, 
@@ -252,27 +264,49 @@ function App() {
               selectedTool={selectedTool}
               onResetDocument={handleResetDocument}
               onExportPdf={handleExportPdf}
+              onExportHover={handleExportHover}
               hasAnnotations={annotations.length > 0}
               isExporting={isExporting}
               signatureDataUrl={signatureDataUrl}
               enableCompliance={enableCompliance}
               onComplianceChange={setEnableCompliance}
-            />
-            <PDFViewer
-              file={file}
-              annotations={annotations}
-              currentPage={currentPage}
-              scale={scale}
-              selectedTool={selectedTool}
-              signatureDataUrl={signatureDataUrl}
-              selectedAnnotationId={selectedAnnotationId}
-              onAnnotationAdd={handleAnnotationAdd}
-              onAnnotationUpdate={handleAnnotationUpdate}
-              onAnnotationSelect={handleAnnotationSelect}
-              onAnnotationDelete={handleDeleteAnnotation}
-              onPageChange={setCurrentPage}
+              currentScale={scale}
               onScaleChange={setScale}
             />
+            {useVirtualization ? (
+              <VirtualizedPDFViewer
+                file={file}
+                annotations={annotations}
+                currentPage={currentPage}
+                scale={scale}
+                selectedTool={selectedTool}
+                signatureDataUrl={signatureDataUrl}
+                selectedAnnotationId={selectedAnnotationId}
+                onAnnotationAdd={handleAnnotationAdd}
+                onAnnotationUpdate={handleAnnotationUpdate}
+                onAnnotationSelect={handleAnnotationSelect}
+                onAnnotationDelete={handleDeleteAnnotation}
+                onPageChange={setCurrentPage}
+                onScaleChange={setScale}
+                showThumbnails={true}
+              />
+            ) : (
+              <PDFViewer
+                file={file}
+                annotations={annotations}
+                currentPage={currentPage}
+                scale={scale}
+                selectedTool={selectedTool}
+                signatureDataUrl={signatureDataUrl}
+                selectedAnnotationId={selectedAnnotationId}
+                onAnnotationAdd={handleAnnotationAdd}
+                onAnnotationUpdate={handleAnnotationUpdate}
+                onAnnotationSelect={handleAnnotationSelect}
+                onAnnotationDelete={handleDeleteAnnotation}
+                onPageChange={setCurrentPage}
+                onScaleChange={setScale}
+              />
+            )}
           </>
         )}
 

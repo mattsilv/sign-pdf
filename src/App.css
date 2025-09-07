@@ -19,9 +19,15 @@ body {
 
 .app-header {
   background: white;
-  padding: 1rem 2rem;
+  padding: 1rem;
   border-bottom: 1px solid #ddd;
   text-align: center;
+}
+
+@media (min-width: 768px) {
+  .app-header {
+    padding: 1rem 2rem;
+  }
 }
 
 .app-header h1 {
@@ -41,6 +47,308 @@ body {
   background: #f8fafc;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
+}
+
+/* Page Thumbnails Navigation */
+.page-thumbnails-container {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.page-thumbnails {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-thumbnails::-webkit-scrollbar {
+  height: 6px;
+}
+
+.page-thumbnails::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.page-thumbnails::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.page-thumbnails::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.page-thumbnail {
+  flex-shrink: 0;
+  width: 80px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  background: white;
+  position: relative;
+}
+
+.page-thumbnail:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page-thumbnail.active {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.page-thumbnail:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.thumbnail-content {
+  width: 100%;
+  aspect-ratio: 0.77; /* Standard US Letter ratio */
+  overflow: hidden;
+  border-radius: 2px;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnail-content img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.thumbnail-loading {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.thumbnail-number {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #d1d5db;
+}
+
+.thumbnail-label {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.page-thumbnail.active .thumbnail-label {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* Virtualized PDF Viewer */
+.virtualized-pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f5f5f5;
+}
+
+.pdf-pages-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  scroll-behavior: smooth;
+}
+
+@media (max-width: 767px) {
+  .pdf-pages-container {
+    padding: 0.5rem;
+  }
+}
+
+.page-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.pdf-page {
+  position: relative;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.page-number {
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.pdf-canvas {
+  display: block;
+  pointer-events: none;
+}
+
+.pdf-page-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+}
+
+.loading-spinner {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.annotations-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.annotations-layer .annotation {
+  pointer-events: auto;
+}
+
+.annotation {
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.annotation.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.annotation.hovered {
+  border-color: #93c5fd;
+}
+
+.annotation-delete {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  border: 2px solid white;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.annotation-delete:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.text-annotation {
+  padding: 4px;
+  font-size: 14px;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkmark-annotation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.date-annotation {
+  padding: 4px;
+  font-size: 12px;
+  color: #000;
+  white-space: nowrap;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .page-thumbnails-container {
+    padding: 0.25rem;
+  }
+  
+  .page-thumbnails {
+    padding: 0.25rem;
+    gap: 0.25rem;
+  }
+  
+  .page-thumbnail {
+    width: 60px;
+  }
+  
+  .thumbnail-number {
+    font-size: 1.25rem;
+  }
+  
+  .thumbnail-label {
+    font-size: 0.625rem;
+  }
+}
+
+/* Virtualization debug (development only) */
+.virtualization-debug {
+  font-family: 'Courier New', monospace;
+  pointer-events: none;
+  user-select: none;
 }
 
 .compliance-badge {
@@ -77,13 +385,23 @@ body {
 }
 
 .app-main {
-  padding: 2rem;
+  padding: 1rem;
   max-width: 900px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   flex: 1;
+  
+  /* Mobile: Add bottom padding for fixed toolbar */
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .app-main {
+    padding: 2rem;
+    padding-bottom: 2rem;
+  }
 }
 
 .app-footer {
@@ -523,24 +841,58 @@ body {
   background: #e5e7eb;
 }
 
-/* Tool Panel */
+/* Tool Panel - Mobile First */
 .tool-panel {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   border: 1px solid #e5e7eb;
   margin-bottom: 1.5rem;
   width: 100%;
-  max-width: 800px;
-  min-width: 700px; /* Prevent shrinking/expanding */
+  
+  /* Mobile: Fixed bottom toolbar */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  border-radius: 16px 16px 0 0;
+  margin: 0;
+  padding: 8px max(12px, env(safe-area-inset-right)) 
+           calc(8px + env(safe-area-inset-bottom)) 
+           max(12px, env(safe-area-inset-left));
+}
+
+/* Desktop: Regular positioned panel */
+@media (min-width: 768px) {
+  .tool-panel {
+    position: relative;
+    max-width: 800px;
+    min-width: 700px;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
 }
 
 .tool-panel h3 {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   color: #1f2937;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
+  
+  /* Mobile: Hide title to save space */
+  display: none;
+}
+
+/* Desktop: Show title */
+@media (min-width: 768px) {
+  .tool-panel h3 {
+    display: block;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+  }
 }
 
 .tool-panel-content {
@@ -553,13 +905,33 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
+  gap: 0.5rem;
+  
+  /* Mobile: Stack vertically if needed */
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .tool-buttons-row {
+    flex-direction: row;
+    gap: 2rem;
+  }
 }
 
 .tool-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
+  gap: 0.5rem;
+  
+  /* Mobile: Ensure proper spacing */
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .tool-buttons {
+    gap: 0.75rem;
+    width: auto;
+  }
 }
 
 .tool-button-wrapper {
@@ -573,14 +945,26 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1rem 0.75rem;
   border: 2px solid #e5e7eb;
   background: white;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 80px;
-  height: 80px;
+  
+  /* Mobile: 44pt touch targets */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.8rem;
+}
+
+@media (min-width: 768px) {
+  .tool-button {
+    padding: 1rem 0.75rem;
+    min-width: 80px;
+    height: 80px;
+    font-size: 1rem;
+  }
 }
 
 .tool-button:hover {
@@ -618,24 +1002,108 @@ body {
 
 .tool-actions {
   display: flex;
-  flex-direction: column;
   gap: 0.5rem;
-  align-items: stretch;
-  min-width: 160px; /* Fixed width to prevent layout shift */
+  align-items: center;
+  
+  /* Mobile: Horizontal layout with smaller buttons */
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .tool-actions {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 160px;
+    width: auto;
+  }
 }
 
 .tool-actions button.compact {
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: 6px;
   white-space: nowrap;
+  
+  /* Mobile: Ensure 44pt touch targets */
+  min-width: 44px;
+  min-height: 44px;
+}
+
+@media (min-width: 768px) {
+  .tool-actions button.compact {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    min-width: auto;
+    min-height: auto;
+  }
+}
+
+.tool-actions button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   transition: all 0.2s ease;
   width: 100%;
+}
+
+/* Zoom Controls - Mobile First */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 2px;
+  background: white;
+}
+
+.zoom-button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.zoom-button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.zoom-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.zoom-display {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Mobile-only visibility */
+.mobile-only {
+  display: flex;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
 }
 
 .tool-actions button.reset-document-button {
@@ -724,7 +1192,7 @@ body {
   color: #1d4ed8;
 }
 
-/* Signature Modal */
+/* Signature Modal - Mobile First */
 .signature-modal-overlay {
   position: fixed;
   top: 0;
@@ -733,77 +1201,218 @@ body {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* Mobile: Modal slides up from bottom */
   justify-content: center;
   z-index: 1000;
 }
 
+/* Mobile: Full screen modal */
 .signature-modal {
   background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border-radius: 12px 12px 0 0; /* Mobile: Round top corners only */
+  padding: 1rem;
+  width: 100%;
+  height: 85vh; /* Mobile: Most of screen, leaving room for status bar */
+  max-height: 100vh;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Desktop: Center modal */
+@media (min-width: 768px) {
+  .signature-modal-overlay {
+    align-items: center;
+  }
+  
+  .signature-modal {
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-width: 500px;
+    width: 90%;
+    height: auto;
+    max-height: 90vh;
+    animation: fadeIn 0.2s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .signature-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
 }
 
 .signature-modal-header h3 {
   margin: 0;
   color: #333;
+  font-size: 1.1rem; /* Mobile: Slightly smaller heading */
+}
+
+@media (min-width: 768px) {
+  .signature-modal-header h3 {
+    font-size: 1.25rem;
+  }
 }
 
 .close-button {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   cursor: pointer;
   color: #666;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 44px; /* Mobile: 44pt touch target */
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  -webkit-tap-highlight-color: transparent; /* Remove iOS tap highlight */
+  touch-action: manipulation; /* Prevent double-tap zoom */
+  -webkit-touch-callout: none; /* Disable iOS callouts */
+  -webkit-user-select: none; /* Prevent text selection on iOS */
+  user-select: none;
+}
+
+.close-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 768px) {
+  .close-button {
+    width: 32px;
+    height: 32px;
+    font-size: 1.5rem;
+  }
 }
 
 .signature-canvas-container {
   border: 2px dashed #ddd;
   border-radius: 8px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  flex: 1; /* Mobile: Take available space */
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Allow shrinking */
+  background: white;
+  position: relative;
+}
+
+.signature-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #9ca3af;
+  font-size: 0.875rem;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .signature-hint {
+    font-size: 1rem;
+  }
 }
 
 .signature-canvas {
   display: block;
   width: 100%;
-  height: 200px;
+  flex: 1; /* Mobile: Fill container height */
   cursor: crosshair;
+  touch-action: none; /* Prevent scrolling while drawing */
+  border-radius: 6px;
+}
+
+/* Fixed height on desktop */
+@media (min-width: 768px) {
+  .signature-canvas-container {
+    flex: none;
+    height: auto;
+  }
+  
+  .signature-canvas {
+    height: 200px;
+    flex: none;
+  }
 }
 
 .signature-modal-actions {
   display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+  gap: 0.75rem;
+  justify-content: space-between; /* Mobile: Spread buttons */
+  flex-shrink: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (min-width: 768px) {
+  .signature-modal-actions {
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 0;
+    border-top: none;
+  }
 }
 
 .signature-modal-actions button {
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.25rem; /* Mobile: Larger touch targets */
   border: 1px solid #ddd;
   background: white;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem; /* Mobile: Larger text */
+  font-weight: 500;
   transition: all 0.2s;
+  flex: 1; /* Mobile: Equal width buttons */
+  min-height: 48px; /* Mobile: 48pt touch target */
+  -webkit-tap-highlight-color: transparent; /* Remove iOS tap highlight */
+  touch-action: manipulation; /* Prevent double-tap zoom */
+  -webkit-touch-callout: none; /* Disable iOS callouts */
+  -webkit-user-select: none; /* Prevent text selection on iOS */
+  user-select: none;
+}
+
+@media (min-width: 768px) {
+  .signature-modal-actions button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    flex: none;
+    min-height: auto;
+  }
 }
 
 .signature-modal-actions button:hover:not(:disabled) {
   background: #f0f0f0;
+}
+
+.signature-modal-actions button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .save-button {
@@ -825,11 +1434,20 @@ body {
 /* Signature Mode Selector */
 .signature-mode-selector {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem;
   background: #f5f5f5;
-  border-radius: 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .signature-mode-selector {
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+  }
 }
 
 .mode-option {
@@ -837,11 +1455,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem;
-  border-radius: 6px;
+  padding: 0.625rem 0.5rem;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   border: 2px solid transparent;
+  min-height: 44px; /* Mobile touch target */
+}
+
+@media (min-width: 768px) {
+  .mode-option {
+    padding: 0.75rem;
+    border-radius: 6px;
+  }
 }
 
 .mode-option:hover {
@@ -853,28 +1479,55 @@ body {
   border-color: #2563eb;
 }
 
+.mode-option:active {
+  transform: scale(0.98);
+}
+
 .mode-option input[type="radio"] {
-  margin-right: 0.5rem;
+  margin-right: 0.375rem;
+}
+
+@media (min-width: 768px) {
+  .mode-option input[type="radio"] {
+    margin-right: 0.5rem;
+  }
 }
 
 .mode-option span {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: #333;
+}
+
+@media (min-width: 768px) {
+  .mode-option span {
+    font-size: 0.95rem;
+  }
 }
 
 /* Typed Signature Input */
 .signature-text-input {
   width: 100%;
   padding: 1rem;
-  font-size: 32px;
+  font-size: clamp(24px, 8vw, 36px); /* Responsive font size */
   font-family: 'Brush Script MT', 'Lucida Handwriting', 'Apple Chancery', cursive;
   font-style: italic;
   border: none;
   background: white;
   text-align: center;
-  height: 200px;
+  flex: 1; /* Mobile: Fill available height */
   resize: none;
   outline: none;
+  border-radius: 6px;
+  -webkit-appearance: none; /* Remove iOS styling */
+}
+
+@media (min-width: 768px) {
+  .signature-text-input {
+    font-size: 32px;
+    height: 200px;
+    flex: none;
+  }
 }
 
 .signature-text-input::placeholder {
@@ -888,12 +1541,22 @@ body {
 .storage-indicator {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   background: #e0f2fe;
   border-radius: 6px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .storage-indicator {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
 }
 
 .storage-status {
@@ -901,6 +1564,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  font-weight: 500;
 }
 
 .clear-storage-link {
@@ -909,12 +1573,28 @@ body {
   color: #0369a1;
   text-decoration: underline;
   cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  margin: -0.25rem -0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+@media (min-width: 768px) {
+  .clear-storage-link {
+    font-size: 0.85rem;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 .clear-storage-link:hover {
   color: #075985;
+  background: rgba(3, 105, 161, 0.1);
+}
+
+.clear-storage-link:active {
+  transform: scale(0.95);
 }
 
 /* Edit Signature Button */
@@ -1087,4 +1767,64 @@ body {
 .modal-legal-disclaimer strong {
   color: #b45309;
   font-weight: 600;
+}
+
+/* Mobile PDF Viewer Enhancements */
+@media (max-width: 768px) {
+  /* Main PDF viewer container - allow overflow for panning */
+  .pdf-viewer {
+    padding: 0.5rem;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  /* PDF page container - allow pinch-zoom and pan */
+  .pdf-page {
+    touch-action: pinch-zoom; /* Allow pinch-zoom and pan, but prevent other gestures */
+    -webkit-user-select: none;
+    user-select: none;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Virtualized PDF viewer specific */
+  .virtualized-pdf-viewer {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .pdf-pages-container {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.5rem;
+  }
+  
+  /* Canvas should maintain aspect ratio and fit width */
+  .pdf-canvas {
+    max-width: 100%;
+    height: auto;
+    touch-action: pinch-zoom;
+  }
+  
+  /* Annotations layer should allow interaction */
+  .annotations-layer {
+    touch-action: auto; /* Allow all touch interactions for annotations */
+  }
+  
+  /* Disable text selection on mobile for smoother interactions */
+  .pdf-viewer * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Tool panel should stick to bottom on mobile */
+  .tool-panel {
+    position: sticky;
+    bottom: 0;
+    z-index: 1000;
+    background: white;
+    border-top: 2px solid #e5e7eb;
+  }
 }

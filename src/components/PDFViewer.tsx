@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { loadPdfDocument, renderPage } from '../lib/pdf/viewer';
 import { GeometryManager, getAnnotationAnchor, getDefaultDimensions, FontMetricsHelper } from '../lib/pdf/geometry';
 import { Annotation } from '../lib/types';
+// import { usePointerEvents, type PointerState } from '../hooks/usePointerEvents';
+import { usePinchZoom } from '../hooks/usePinchZoom';
 import { TextInputModal } from './TextInputModal';
 import { emitDebugInfo } from './CoordinateDebugger';
 import type { PDFDocumentProxy, PageViewport } from 'pdfjs-dist';
@@ -52,6 +54,16 @@ export function PDFViewer({
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStart, setResizeStart] = useState<{handle: string, x: number, y: number, origWidth: number, origHeight: number, aspectRatio: number} | null>(null);
   const [dragTransform, setDragTransform] = useState<{id: string, x: number, y: number} | null>(null);
+  const [initialScaleSet, setInitialScaleSet] = useState(false);
+  
+  // Detect mobile device
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
+  
+  // Pinch-to-zoom functionality
+  const pinchZoom = usePinchZoom(scale, 0.5, 5, {
+    onScaleChange: onScaleChange,
+  });
   
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -72,16 +84,30 @@ export function PDFViewer({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedAnnotationId, onAnnotationSelect, annotations]);
 
-  // Load PDF
+  // Load PDF and set initial scale
   useEffect(() => {
     if (!file) return;
     
-    loadPdfDocument(file).then(doc => {
+    loadPdfDocument(file).then(async doc => {
       setPdfDoc(doc);
       setTotalPages(doc.numPages);
       onPageChange(1);
+      
+      // Calculate initial scale for mobile to fit width
+      if (isMobile && !initialScaleSet) {
+        const firstPage = await doc.getPage(1);
+        const viewport = firstPage.getViewport({ scale: 1.0 });
+        
+        // Get container width (accounting for padding/margins)
+        const containerWidth = window.innerWidth - 32; // 16px padding on each side
+        const fitWidthScale = containerWidth / viewport.width;
+        
+        // Set the scale to fit width
+        onScaleChange(fitWidthScale);
+        setInitialScaleSet(true);
+      }
     });
-  }, [file, onPageChange]);
+  }, [file, onPageChange, onScaleChange, isMobile, initialScaleSet]);
 
   // Render current page
   useEffect(() => {
@@ -168,8 +194,8 @@ export function PDFViewer({
     return null;
   };
 
-  // Handle canvas clicks for annotation placement
-  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  // Handle canvas clicks for annotation placement (unified mouse/touch)
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement> | React.PointerEvent<HTMLCanvasElement>) => {
     if (!viewport || isDragging || !pageLayerRef.current) return;
 
     // Use page layer as reference frame instead of canvas - this eliminates gutter offset
@@ -318,8 +344,8 @@ export function PDFViewer({
     }
   };
 
-  // Handle mouse down for drag start
-  const handleMouseDown = (event: React.MouseEvent, annotationId: string) => {
+  // Handle pointer down for drag start (unified mouse/touch)
+  const handlePointerDown = (event: React.PointerEvent, annotationId: string) => {
     event.stopPropagation();
     event.preventDefault();
     
@@ -327,6 +353,12 @@ export function PDFViewer({
     
     const annotation = annotations.find(a => a.id === annotationId);
     if (!annotation) return;
+    
+    // Set pointer capture for consistent drag behavior
+    const element = event.currentTarget as Element;
+    if (element.setPointerCapture) {
+      element.setPointerCapture(event.pointerId);
+    }
     
     // Use page layer coordinates for consistent reference frame
     const rect = pageLayerRef.current.getBoundingClientRect();
@@ -345,8 +377,8 @@ export function PDFViewer({
     onAnnotationSelect(annotationId);
   };
   
-  // Handle resize start
-  const handleResizeStart = (event: React.MouseEvent, handle: string) => {
+  // Handle resize start (unified pointer events)
+  const handleResizeStart = (event: React.PointerEvent, handle: string) => {
     event.stopPropagation();
     event.preventDefault();
     
@@ -354,6 +386,12 @@ export function PDFViewer({
     
     const annotation = annotations.find(a => a.id === selectedAnnotationId);
     if (!annotation) return;
+    
+    // Set pointer capture for consistent resize behavior
+    const element = event.currentTarget as Element;
+    if (element.setPointerCapture) {
+      element.setPointerCapture(event.pointerId);
+    }
     
     // Use page layer coordinates for consistent reference frame
     const rect = pageLayerRef.current.getBoundingClientRect();
@@ -392,7 +430,7 @@ export function PDFViewer({
     let finalDeltaX = 0;
     let finalDeltaY = 0;
     
-    const handleMouseMove = (event: MouseEvent) => {
+    const handlePointerMove = (event: PointerEvent) => {
       // Convert client coordinates to page-layer-relative coordinates
       const rect = pageLayerRef.current!.getBoundingClientRect();
       const currentX = event.clientX - rect.left;
@@ -406,7 +444,7 @@ export function PDFViewer({
       setDragTransform({ id: selectedAnnotationId, x: finalDeltaX, y: finalDeltaY });
     };
     
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       // Convert final delta to PDF coordinates and update the actual position
       if (finalDeltaX !== 0 || finalDeltaY !== 0) {
         // Use centralized geometry system for coordinate conversion
@@ -437,7 +475,7 @@ export function PDFViewer({
           newYPdf = clampedY;
         }
         
-        // Update annotation position once on mouse up
+        // Update annotation position once on pointer up
         onAnnotationUpdate(selectedAnnotationId, {
           xPdf: newXPdf,
           yPdf: newYPdf
@@ -449,21 +487,21 @@ export function PDFViewer({
       setDragTransform(null);
     };
     
-    // Add event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    // Add event listeners for pointer events
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
     
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
     };
   }, [isDragging, dragStart, selectedAnnotationId, viewport, onAnnotationUpdate]);
   
-  // Handle mouse move for resizing
+  // Handle pointer move for resizing
   useEffect(() => {
     if (!isResizing || !resizeStart || !selectedAnnotationId || !viewport) return;
     
-    const handleMouseMove = (event: MouseEvent) => {
+    const handlePointerMove = (event: PointerEvent) => {
       const rect = pageLayerRef.current!.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -518,17 +556,17 @@ export function PDFViewer({
       });
     };
     
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       setIsResizing(false);
       setResizeStart(null);
     };
     
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
     
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
     };
   }, [isResizing, resizeStart, selectedAnnotationId, viewport, annotations, onAnnotationUpdate]);
 
@@ -620,11 +658,36 @@ export function PDFViewer({
             position: 'relative',
             width: viewport ? `${viewport.width}px` : 'auto',
             height: viewport ? `${viewport.height}px` : 'auto',
+            touchAction: 'pan-x pan-y pinch-zoom',
+            transform: `scale(${pinchZoom.state.scale}) translate(${pinchZoom.state.x}px, ${pinchZoom.state.y}px)`,
+            transformOrigin: '0 0',
+          }}
+          onPointerDown={(e) => {
+            // Only handle pinch-zoom if not interacting with annotations
+            if (!isDragging && !isResizing && !pinchZoom.state.isPinching) {
+              pinchZoom.handlers.onPointerDown(e.nativeEvent);
+            }
+          }}
+          onPointerMove={(e) => {
+            if (pinchZoom.state.isPinching) {
+              pinchZoom.handlers.onPointerMove(e.nativeEvent);
+            }
+          }}
+          onPointerUp={(e) => {
+            if (pinchZoom.state.isPinching) {
+              pinchZoom.handlers.onPointerUp(e.nativeEvent);
+            }
+          }}
+          onPointerCancel={(e) => {
+            if (pinchZoom.state.isPinching) {
+              pinchZoom.handlers.onPointerCancel(e.nativeEvent);
+            }
           }}
         >
           <canvas
             ref={canvasRef}
             onClick={handleCanvasClick}
+            onPointerDown={handleCanvasClick}
             style={{
               position: 'absolute',
               left: 0,
@@ -693,9 +756,10 @@ export function PDFViewer({
                 lineHeight: 'normal', // Consistent line height for all annotations
                 pointerEvents: 'auto',
                 cursor: (isDragging || isResizing) && annotation.id === selectedAnnotationId ? 'grabbing' : 'grab',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                touchAction: 'none'
               }}
-              onMouseDown={(e) => handleMouseDown(e, annotation.id)}
+              onPointerDown={(e) => handlePointerDown(e, annotation.id)}
               onMouseEnter={() => setHoveredAnnotationId(annotation.id)}
               onMouseLeave={() => setHoveredAnnotationId(null)}
             >
@@ -798,9 +862,10 @@ export function PDFViewer({
                     top: '-4px',
                     left: '-4px',
                     cursor: 'nw-resize',
-                    pointerEvents: 'auto'
+                    pointerEvents: 'auto',
+                    touchAction: 'none'
                   }} 
-                  onMouseDown={(e) => handleResizeStart(e, 'nw')}
+                  onPointerDown={(e) => handleResizeStart(e, 'nw')}
                   />
                   <div style={{
                     position: 'absolute',
@@ -812,9 +877,10 @@ export function PDFViewer({
                     top: '-4px',
                     right: '-4px',
                     cursor: 'ne-resize',
-                    pointerEvents: 'auto'
+                    pointerEvents: 'auto',
+                    touchAction: 'none'
                   }}
-                  onMouseDown={(e) => handleResizeStart(e, 'ne')}
+                  onPointerDown={(e) => handleResizeStart(e, 'ne')}
                   />
                   <div style={{
                     position: 'absolute',
@@ -826,9 +892,10 @@ export function PDFViewer({
                     bottom: '-4px',
                     left: '-4px',
                     cursor: 'sw-resize',
-                    pointerEvents: 'auto'
+                    pointerEvents: 'auto',
+                    touchAction: 'none'
                   }}
-                  onMouseDown={(e) => handleResizeStart(e, 'sw')}
+                  onPointerDown={(e) => handleResizeStart(e, 'sw')}
                   />
                   <div style={{
                     position: 'absolute',
@@ -840,9 +907,10 @@ export function PDFViewer({
                     bottom: '-4px',
                     right: '-4px',
                     cursor: 'se-resize',
-                    pointerEvents: 'auto'
+                    pointerEvents: 'auto',
+                    touchAction: 'none'
                   }}
-                  onMouseDown={(e) => handleResizeStart(e, 'se')}
+                  onPointerDown={(e) => handleResizeStart(e, 'se')}
                   />
                 </>
               )}

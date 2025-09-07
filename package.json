@@ -12,6 +12,8 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
+    "test:mobile": "playwright test tests/mobile/",
+    "test:mobile:ui": "playwright test tests/mobile/ --ui",
     "prepare": "husky"
   },
   "dependencies": {

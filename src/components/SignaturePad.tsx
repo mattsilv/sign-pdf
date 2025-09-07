@@ -26,6 +26,10 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
   const [typedSignature, setTypedSignature] = useState('');
   const [savedToStorage, setSavedToStorage] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Detect mobile device
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
 
   // Load saved signature from localStorage on mount
   useEffect(() => {
@@ -58,6 +62,23 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
     }
   }, [isOpen, existingSignature]);
 
+  // Prevent iOS bounce and zoom
+  useEffect(() => {
+    if (!isOpen || !isMobile) return;
+    
+    const preventBounce = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault(); // Prevent pinch zoom
+      }
+    };
+    
+    document.addEventListener('touchmove', preventBounce, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', preventBounce);
+    };
+  }, [isOpen, isMobile]);
+
   useEffect(() => {
     if (!canvasRef.current || !isOpen || mode !== 'draw') return;
 
@@ -65,17 +86,38 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
     const signaturePad = new SignaturePad(canvas, {
       backgroundColor: 'rgba(255, 255, 255, 0)',
       penColor: 'rgb(0, 0, 0)',
+      minWidth: isMobile ? 1.5 : 0.5,
+      maxWidth: isMobile ? 3.5 : 2.5,
+      velocityFilterWeight: 0.7,
+      throttle: isMobile ? 0 : 16, // Disable throttling on mobile for smoother drawing
     });
 
     signaturePadRef.current = signaturePad;
 
     const handleResize = () => {
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext('2d')!.scale(ratio, ratio);
+      
+      // Get the actual canvas dimensions
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * ratio;
+      canvas.height = rect.height * ratio;
+      
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(ratio, ratio);
+      }
+      
+      // Clear the signature pad but preserve existing data if any
+      const currentData = signaturePadRef.current?.toData();
       signaturePad.clear();
-      setIsEmpty(true);
+      
+      // Restore data if it existed
+      if (currentData && currentData.length > 0) {
+        signaturePad.fromData(currentData);
+        setIsEmpty(false);
+      } else {
+        setIsEmpty(true);
+      }
     };
 
     const handleSignatureChange = () => {
@@ -93,9 +135,15 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
       window.removeEventListener('resize', handleResize);
       signaturePad.off();
     };
-  }, [isOpen, mode]);
+  }, [isOpen, mode, isMobile]);
 
-  const handleSave = () => {
+  const handleSave = (e?: React.MouseEvent | React.TouchEvent) => {
+    // Prevent event bubbling on mobile
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     let dataUrl: string | null = null;
 
     if (mode === 'draw' && signaturePadRef.current && !isEmpty) {
@@ -172,7 +220,13 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
     }
   };
 
-  const handleClose = () => {
+  const handleClose = (e?: React.MouseEvent | React.TouchEvent) => {
+    // Prevent event bubbling on mobile
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (hasUnsavedChanges && !isEmpty) {
       const confirmed = window.confirm('You have an unsaved signature. Are you sure you want to close without saving?');
       if (!confirmed) return;
@@ -204,11 +258,16 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
   };
 
   return (
-    <div className="signature-modal-overlay" onClick={handleClose}>
-      <div className="signature-modal" onClick={e => e.stopPropagation()}>
+    <div className="signature-modal-overlay" onTouchEnd={handleClose} onClick={handleClose}>
+      <div className="signature-modal" onTouchEnd={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
         <div className="signature-modal-header">
           <h3>{existingSignature ? 'Edit' : 'Create'} Your Signature</h3>
-          <button className="close-button" onClick={handleClose}>×</button>
+          <button 
+            className="close-button" 
+            onTouchEnd={handleClose}
+            onClick={handleClose}
+            type="button"
+          >×</button>
         </div>
         
         <div className="signature-mode-selector">
@@ -236,12 +295,19 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
         
         <div className="signature-canvas-container">
           {mode === 'draw' ? (
-            <canvas
-              ref={canvasRef}
-              className="signature-canvas"
-              width={400}
-              height={200}
-            />
+            <>
+              <canvas
+                ref={canvasRef}
+                className="signature-canvas"
+                width={400}
+                height={200}
+              />
+              {isEmpty && (
+                <div className="signature-hint">
+                  {isMobile ? 'Draw your signature with your finger' : 'Draw your signature above'}
+                </div>
+              )}
+            </>
           ) : (
             <input
               type="text"
@@ -258,8 +324,14 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
                   handleSave();
                 }
               }}
+              onBlur={(e) => {
+                // Prevent iOS Safari from keeping focus and blocking button taps
+                if (isMobile) {
+                  e.target.blur();
+                }
+              }}
               placeholder="Type your signature here"
-              autoFocus
+              autoFocus={!isMobile}
             />
           )}
         </div>
@@ -278,11 +350,21 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
         )}
         
         <div className="signature-modal-actions">
-          <button onClick={handleClearAll}>Clear</button>
           <button 
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleClearAll();
+            }}
+            onClick={handleClearAll}
+            type="button"
+          >Clear</button>
+          <button 
+            onTouchEnd={handleSave}
             onClick={handleSave} 
             disabled={checkIfEmpty()}
             className="save-button"
+            type="button"
           >
             Save Signature
           </button>
