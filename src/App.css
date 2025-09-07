@@ -1828,3 +1828,168 @@ body {
     border-top: 2px solid #e5e7eb;
   }
 }
+
+/* Swipe Gesture Indicators */
+.swipe-indicator {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+  z-index: 1001;
+  transition: all 0.2s ease-out;
+}
+
+.swipe-indicator-left {
+  left: 1rem;
+}
+
+.swipe-indicator-right {
+  right: 1rem;
+}
+
+.swipe-arrow {
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.swipe-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Page transition animation */
+.pdf-pages-container {
+  transition: transform 0.15s ease-out;
+}
+
+.pdf-pages-container.transitioning {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .pdf-pages-container {
+    will-change: transform;
+  }
+  
+  .swipe-indicator {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Touch-optimized annotations */
+.annotation.touch-optimized {
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.annotation.touch-optimized.selected {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+}
+
+/* Larger delete button on mobile */
+.annotation-delete.touch-delete {
+  position: absolute;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  border: 2px solid white;
+  font-size: 24px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+/* Resize handles for mobile */
+.resize-handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  touch-action: none;
+  z-index: 11;
+}
+
+.resize-handle-nw {
+  top: -12px;
+  left: -12px;
+  cursor: nw-resize;
+}
+
+.resize-handle-ne {
+  top: -12px;
+  right: -12px;
+  cursor: ne-resize;
+}
+
+.resize-handle-sw {
+  bottom: -12px;
+  left: -12px;
+  cursor: sw-resize;
+}
+
+.resize-handle-se {
+  bottom: -12px;
+  right: -12px;
+  cursor: se-resize;
+}
+
+/* Long press visual feedback */
+@keyframes longPressRipple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.annotation.long-pressing::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 50%;
+  animation: longPressRipple 0.5s ease-out;
+}
+
+/* Touch-friendly annotation content */
+@media (hover: none) and (pointer: coarse) {
+  .annotation-content {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  
+  .annotation {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}

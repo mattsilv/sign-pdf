@@ -3,8 +3,10 @@ import { loadPdfDocument } from '../lib/pdf/viewer';
 import { getAnnotationAnchor, getDefaultDimensions } from '../lib/pdf/geometry';
 import { Annotation } from '../lib/types';
 import { useVirtualizedPages } from '../hooks/useVirtualizedPages';
+import { useSwipeGestures } from '../hooks/useSwipeGestures';
 import { PageThumbnails } from './PageThumbnails';
 import { TextInputModal } from './TextInputModal';
+import { AnnotationLayer } from './AnnotationLayer';
 import { emitDebugInfo } from './CoordinateDebugger';
 import type { PDFDocumentProxy, PageViewport } from 'pdfjs-dist';
 
@@ -34,6 +36,7 @@ export function VirtualizedPDFViewer({
   signatureDataUrl,
   selectedAnnotationId,
   onAnnotationAdd,
+  onAnnotationUpdate,
   onAnnotationSelect,
   onAnnotationDelete,
   onPageChange,
@@ -47,8 +50,10 @@ export function VirtualizedPDFViewer({
   const [pageViewports, setPageViewports] = useState<Map<number, PageViewport>>(new Map());
   const [textModalOpen, setTextModalOpen] = useState(false);
   const [pendingTextAnnotation, setPendingTextAnnotation] = useState<{xPdf: number, yPdf: number, pageIndex: number} | null>(null);
-  const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
   const [initialScaleSet, setInitialScaleSet] = useState(false);
+  const [swipeProgress, setSwipeProgress] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Detect mobile device
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
@@ -255,68 +260,95 @@ export function VirtualizedPDFViewer({
         )}
 
         {/* Render annotations for this page */}
-        <div className="annotations-layer">
-          {pageAnnotations.map(annotation => (
-            <div
-              key={annotation.id}
-              className={`annotation annotation-${annotation.type} ${
-                selectedAnnotationId === annotation.id ? 'selected' : ''
-              } ${hoveredAnnotationId === annotation.id ? 'hovered' : ''}`}
-              style={{
-                position: 'absolute',
-                left: annotation.xPdf,
-                top: viewport.height - annotation.yPdf - annotation.heightPdf,
-                width: annotation.widthPdf,
-                height: annotation.heightPdf,
-                cursor: 'grab'
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onAnnotationSelect(annotation.id);
-              }}
-              onMouseEnter={() => setHoveredAnnotationId(annotation.id)}
-              onMouseLeave={() => setHoveredAnnotationId(null)}
-            >
-              {annotation.type === 'signature' && annotation.content && (
-                <img 
-                  src={annotation.content} 
-                  alt="Signature"
-                  style={{ width: '100%', height: '100%' }}
-                />
-              )}
-              {annotation.type === 'text' && (
-                <div className="text-annotation">{annotation.content}</div>
-              )}
-              {annotation.type === 'checkmark' && (
-                <div className="checkmark-annotation">✓</div>
-              )}
-              {annotation.type === 'date' && (
-                <div className="date-annotation">{annotation.content}</div>
-              )}
-              
-              {/* Delete button */}
-              {selectedAnnotationId === annotation.id && (
-                <button
-                  className="annotation-delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAnnotationDelete(annotation.id);
-                  }}
-                  aria-label="Delete annotation"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
+        <AnnotationLayer
+          annotations={pageAnnotations}
+          viewport={viewport}
+          selectedId={selectedAnnotationId}
+          onSelect={onAnnotationSelect}
+          onDelete={onAnnotationDelete}
+          onUpdate={onAnnotationUpdate}
+          isMobile={isMobile}
+        />
       </div>
     );
   };
 
+  // Handle page navigation with animation
+  const navigateToPage = useCallback((targetPage: number) => {
+    if (targetPage < 1 || targetPage > totalPages || isTransitioning) return;
+    
+    setIsTransitioning(true);
+    
+    // Scroll to the target page
+    if (pagesContainerRef.current) {
+      const targetPageEl = pagesContainerRef.current.querySelector(
+        `.pdf-page[data-page="${targetPage}"]`
+      ) as HTMLElement;
+      
+      if (targetPageEl) {
+        targetPageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    
+    onPageChange(targetPage);
+    
+    // Reset transition state after animation
+    setTimeout(() => {
+      setIsTransitioning(false);
+      setSwipeProgress(0);
+      setSwipeDirection(null);
+    }, 300);
+  }, [totalPages, isTransitioning, onPageChange]);
+
+  // Swipe gesture handlers
+  const handleSwipeLeft = useCallback(() => {
+    navigateToPage(currentPage + 1);
+  }, [currentPage, navigateToPage]);
+
+  const handleSwipeRight = useCallback(() => {
+    navigateToPage(currentPage - 1);
+  }, [currentPage, navigateToPage]);
+
+  const handleSwipeStart = useCallback(() => {
+    // Optional: Add haptic feedback if available
+    if ('vibrate' in navigator && isMobile) {
+      navigator.vibrate(10);
+    }
+  }, [isMobile]);
+
+  const handleSwipeMove = useCallback((progress: number, direction: 'left' | 'right' | 'up' | 'down') => {
+    if (direction === 'left' || direction === 'right') {
+      setSwipeProgress(progress);
+      setSwipeDirection(direction as 'left' | 'right');
+    }
+  }, []);
+
+  const handleSwipeEnd = useCallback(() => {
+    setSwipeProgress(0);
+    setSwipeDirection(null);
+  }, []);
+
+  // Use swipe gestures hook
+  useSwipeGestures(
+    pagesContainerRef,
+    {
+      onSwipeLeft: handleSwipeLeft,
+      onSwipeRight: handleSwipeRight,
+      onSwipeStart: handleSwipeStart,
+      onSwipeMove: handleSwipeMove,
+      onSwipeEnd: handleSwipeEnd,
+    },
+    {
+      threshold: 50,
+      velocity: 0.3,
+      // Enable mouse events for desktop and testing (Playwright)
+      allowMouseEvents: !isMobile || process.env.NODE_ENV === 'development'
+    }
+  );
+
   // Handle scroll to detect current page
   const handleScroll = useCallback(() => {
-    if (!pagesContainerRef.current || !pdfDoc) return;
+    if (!pagesContainerRef.current || !pdfDoc || isTransitioning) return;
 
     const container = pagesContainerRef.current;
     
@@ -347,7 +379,7 @@ export function VirtualizedPDFViewer({
     if (mostVisiblePage !== currentPage) {
       onPageChange(mostVisiblePage);
     }
-  }, [currentPage, pdfDoc, onPageChange]);
+  }, [currentPage, pdfDoc, onPageChange, isTransitioning]);
 
   if (!file || !pdfDoc) {
     return <div className="pdf-viewer-empty">No PDF loaded</div>;
@@ -369,6 +401,12 @@ export function VirtualizedPDFViewer({
         className="pdf-pages-container"
         ref={pagesContainerRef}
         onScroll={handleScroll}
+        style={{
+          transform: swipeDirection && swipeProgress > 0 
+            ? `translateX(${swipeDirection === 'left' ? -swipeProgress * 50 : swipeProgress * 50}px)`
+            : undefined,
+          transition: isTransitioning ? 'transform 0.3s ease-out' : undefined
+        }}
       >
         {/* Render all pages (only visible ones will have canvases) */}
         {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
@@ -377,6 +415,39 @@ export function VirtualizedPDFViewer({
           </div>
         ))}
       </div>
+
+      {/* Swipe indicators */}
+      {swipeDirection && swipeProgress > 0 && (
+        <>
+          {/* Left indicator (next page) */}
+          {swipeDirection === 'left' && currentPage < totalPages && (
+            <div 
+              className="swipe-indicator swipe-indicator-left"
+              style={{
+                opacity: swipeProgress,
+                transform: `translateX(${-50 + swipeProgress * 30}px)`
+              }}
+            >
+              <div className="swipe-arrow">→</div>
+              <div className="swipe-text">Page {currentPage + 1}</div>
+            </div>
+          )}
+          
+          {/* Right indicator (previous page) */}
+          {swipeDirection === 'right' && currentPage > 1 && (
+            <div 
+              className="swipe-indicator swipe-indicator-right"
+              style={{
+                opacity: swipeProgress,
+                transform: `translateX(${50 - swipeProgress * 30}px)`
+              }}
+            >
+              <div className="swipe-arrow">←</div>
+              <div className="swipe-text">Page {currentPage - 1}</div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Text input modal */}
       {textModalOpen && (

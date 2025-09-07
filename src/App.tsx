@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PDFViewer } from './components/PDFViewer';
 import { VirtualizedPDFViewer } from './components/VirtualizedPDFViewer';
 import { ToolPanel } from './components/ToolPanel';
 import { ConsentModal } from './components/ConsentModal';
 import { CoordinateDebugger } from './components/CoordinateDebugger';
+import { ResponsiveToolbar } from './components/ResponsiveToolbar';
 import { Annotation } from './lib/types';
+import { useHaptics } from './utils/haptics';
 // Forensics lazy loaded on demand to reduce initial bundle
 import { ForensicsService } from './lib/forensics';
 import { savePdf } from './lib/pdf/save';
+import { useServiceWorker, promptForUpdate } from './hooks/useServiceWorker';
 import './App.css';
 
 function App() {
@@ -27,6 +30,19 @@ function App() {
   
   // Feature flag: Enable virtualization for better performance with large PDFs
   const useVirtualization = true; // Set to true to enable page virtualization
+  
+  // Register service worker for offline support
+  const swStatus = useServiceWorker();
+  
+  // Initialize haptic feedback
+  const haptics = useHaptics();
+  
+  // Show update prompt when available
+  useEffect(() => {
+    if (swStatus.isUpdateAvailable && swStatus.registration) {
+      promptForUpdate(swStatus.registration);
+    }
+  }, [swStatus.isUpdateAvailable, swStatus.registration]);
 
   // Preload export dependencies when hovering export button
   const handleExportHover = () => {
@@ -42,11 +58,13 @@ function App() {
       setFile(selectedFile);
       setAnnotations([]);
       setCurrentPage(1);
+      haptics.success();
     }
   };
 
   const loadSampleDocument = async () => {
     setIsLoadingSample(true);
+    haptics.tap();
     try {
       const response = await fetch('/sample-nda.pdf');
       const blob = await response.blob();
@@ -54,9 +72,11 @@ function App() {
       setFile(sampleFile);
       setAnnotations([]);
       setCurrentPage(1);
+      haptics.success();
     } catch (error) {
       console.error('Failed to load sample document:', error);
       alert('Failed to load sample document. Please try uploading your own PDF.');
+      haptics.error();
     } finally {
       setIsLoadingSample(false);
     }
@@ -77,6 +97,7 @@ function App() {
       ...(selectedTool === 'check' ? { content: '✓' } : {}),
     };
     setAnnotations(prev => [...prev, annotation]);
+    haptics.success();
   };
 
   const handleExportPdf = async () => {
@@ -114,9 +135,11 @@ function App() {
       const filename = `${baseName}-${today}.pdf`;
       
       await savePdf(stampedPdfBytes, filename);
+      haptics.success();
     } catch (error) {
       console.error('Export failed:', error);
       alert('Failed to export PDF. Please try again.');
+      haptics.error();
     } finally {
       setIsExporting(false);
     }
@@ -157,9 +180,11 @@ function App() {
       const filename = `${baseName}-signed-${today}.pdf`;
       
       await savePdf(signedPdfBytes, filename);
+      haptics.success();
     } catch (error) {
       console.error('Export failed:', error);
       alert('Failed to export PDF. Please try again.');
+      haptics.error();
     } finally {
       setIsExporting(false);
       setShowConsentModal(false);
@@ -168,20 +193,24 @@ function App() {
 
   const handleClearAnnotations = () => {
     if (annotations.length > 0) {
+      haptics.warning();
       const confirmed = window.confirm('Are you sure you want to clear all annotations?');
       if (confirmed) {
         setAnnotations([]);
+        haptics.success();
       }
     }
   };
 
   const handleResetDocument = () => {
+    haptics.warning();
     const confirmed = window.confirm('Are you sure you want to start over? This will remove the document and all annotations.');
     if (confirmed) {
       setFile(null);
       setAnnotations([]);
       setCurrentPage(1);
       setSignatureDataUrl(null);
+      haptics.success();
     }
   };
 
@@ -190,6 +219,7 @@ function App() {
     if (selectedAnnotationId === annotationId) {
       setSelectedAnnotationId(null);
     }
+    haptics.tap();
   };
 
   const handleAnnotationUpdate = (id: string, updates: Partial<Annotation>) => {
@@ -200,6 +230,7 @@ function App() {
 
   const handleAnnotationSelect = (id: string | null) => {
     setSelectedAnnotationId(id);
+    if (id) haptics.select();
   };
 
   return (
