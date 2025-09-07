@@ -1,3 +1,5 @@
+import { AnchorType } from './pdf/geometry';
+
 export interface Annotation {
   id: string;
   pageIndex: number;
@@ -8,4 +10,6 @@ export interface Annotation {
   type: "signature" | "text" | "check" | "date";
   content?: string;
   pngDataUrl?: string; // For signatures
+  orderNumber: number; // Display order number for the annotation
+  anchor?: AnchorType; // How to position relative to click point
 }

@@ -29,12 +29,12 @@ export async function renderPage(
     currentRenderTask = null;
   }
 
-  // CRITICAL: PDF.js viewport rotation fix
+  // IMPROVED: Use the actual page rotation to ensure viewer/export consistency
   // PDF coordinate system: origin at bottom-left, Y increases upward
   // Canvas coordinate system: origin at top-left, Y increases downward
-  // The rotate: 0 parameter ensures PDF.js doesn't auto-rotate the document
-  // Without this, PDFs may appear upside down or rotated incorrectly
-  const viewport = page.getViewport({ scale, rotate: 0 });
+  // Using the page's actual rotation ensures both viewer and export use the same orientation
+  const pageRotation = page.rotate || 0;
+  const viewport = page.getViewport({ scale, rotate: pageRotation });
   const ctx = canvas.getContext("2d")!;
 
   // Handle HiDPI

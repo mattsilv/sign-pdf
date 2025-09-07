@@ -62,6 +62,9 @@ export class CoordinateMapper {
     // It automatically handles the Y-axis flip from PDF to canvas coords
     const result = this.viewport.convertToViewportPoint(xPdf, yPdf);
     
+    console.log(`🔄 [COORDINATE] Converting PDF→CSS: (${xPdf}, ${yPdf}) → (${result[0]}, ${result[1]})`);
+    console.log(`📐 [COORDINATE] Viewport: ${this.viewport.width}x${this.viewport.height}, scale: ${this.viewport.scale}`);
+    
     // CRITICAL: PDF.js returns an array, not an object
     if (Array.isArray(result) && result.length >= 2) {
       return [result[0], result[1]] as [number, number];

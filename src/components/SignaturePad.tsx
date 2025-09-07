@@ -252,6 +252,12 @@ export function SignaturePadModal({ isOpen, onClose, onSave, existingSignature }
                 setIsEmpty(!e.target.value.trim());
                 setHasUnsavedChanges(true);
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && typedSignature.trim()) {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
               placeholder="Type your signature here"
               autoFocus
             />

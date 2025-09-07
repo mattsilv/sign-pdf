@@ -31,6 +31,11 @@ This application solves common PDF annotation positioning issues:
 - Minimal padding (1px 2px) and low opacity (0.1/0.2) for unobtrusive annotations
 - Transitions disabled during drag for immediate response
 
+**Annotation Styling System**
+- Conditional styling: signature annotations get zero padding/font size to prevent oversized bounding boxes
+- Order number labels positioned at bottom-left inside annotations with semi-transparent background
+- CSS playground available at `?playground=true` for rapid style iteration using Playwright automation
+
 ### Important Implementation Details
 
 1. **PDF.js Coordinate Arrays**
