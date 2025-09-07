@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PDFViewer } from './components/PDFViewer';
 import { ToolPanel } from './components/ToolPanel';
 import { ConsentModal } from './components/ConsentModal';
+import { CoordinateDebugger } from './components/CoordinateDebugger';
 import { Annotation } from './lib/types';
 import { stampPdfWithForensics } from './lib/pdf/forensics';
 import { ForensicsService } from './lib/forensics';
@@ -9,6 +10,8 @@ import { savePdf } from './lib/pdf/save';
 import './App.css';
 
 function App() {
+  // Note: Debug components removed - see git history for playground/test modes
+
   const [file, setFile] = useState<File | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,13 +50,19 @@ function App() {
     }
   };
 
-  const handleAnnotationAdd = (newAnnotation: Omit<Annotation, 'id'>) => {
+  const handleAnnotationAdd = (newAnnotation: Omit<Annotation, 'id' | 'orderNumber'>) => {
+    // Calculate the next order number
+    const maxOrderNumber = Math.max(0, ...annotations.map(a => a.orderNumber || 0));
+    
     const annotation: Annotation = {
       ...newAnnotation,
       id: Date.now().toString(),
+      orderNumber: maxOrderNumber + 1,
       type: selectedTool,
       ...(selectedTool === 'signature' && signatureDataUrl ? { pngDataUrl: signatureDataUrl } : {}),
+      ...(selectedTool === 'signature' ? { content: newAnnotation.content || 'Signature' } : {}),
       ...(selectedTool === 'date' ? { content: new Date().toLocaleDateString() } : {}),
+      ...(selectedTool === 'check' ? { content: '✓' } : {}),
     };
     setAnnotations(prev => [...prev, annotation]);
   };
@@ -78,6 +87,7 @@ function App() {
       const arrayBuffer = await file.arrayBuffer();
       
       // Import the existing stamp function for simple PDF generation
+      // Fixed: No double anchor application in export
       const { stampPdf } = await import('./lib/pdf/export');
       const stampedPdfBytes = await stampPdf(arrayBuffer, annotations);
       
@@ -259,6 +269,7 @@ function App() {
               onAnnotationAdd={handleAnnotationAdd}
               onAnnotationUpdate={handleAnnotationUpdate}
               onAnnotationSelect={handleAnnotationSelect}
+              onAnnotationDelete={handleDeleteAnnotation}
               onPageChange={setCurrentPage}
               onScaleChange={setScale}
             />
@@ -283,7 +294,7 @@ function App() {
             <ul>
               {annotations.map(ann => (
                 <li key={ann.id} className="annotation-item">
-                  <span>Page {ann.pageIndex + 1}: {ann.type} - {ann.content || 'N/A'}</span>
+                  <span>#{ann.orderNumber || '?'} - Page {ann.pageIndex + 1}: {ann.type} - {ann.content || 'N/A'}</span>
                   <button 
                     className="delete-annotation-button"
                     onClick={() => handleDeleteAnnotation(ann.id)}
@@ -312,6 +323,9 @@ function App() {
         documentName={file?.name}
       />
 
+      {/* Debug overlay for coordinate tracking */}
+      <CoordinateDebugger />
+      
       {/* Testimonials Section */}
       <section className="testimonials-section">
         <div className="testimonial-card">
