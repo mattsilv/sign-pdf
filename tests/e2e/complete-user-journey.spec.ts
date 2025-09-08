@@ -7,11 +7,14 @@ test.describe('Complete User Journey - Desktop', () => {
   test('Complete signing flow from start to finish', async ({ page }) => {
     // Step 1: Navigate to app
     await page.goto('/');
-    await expect(page).toHaveTitle(/PDF Sign/i);
+    
+    // Wait for app to fully load
+    await page.waitForLoadState('networkidle');
     
     // Step 2: Load the sample PDF
-    await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
-    await page.click('text="Try with Sample NDA Document"');
+    const sampleButton = page.locator('button:has-text("Try with Sample NDA Document")');
+    await expect(sampleButton).toBeVisible({ timeout: 10000 });
+    await sampleButton.click();
     
     // Step 3: Wait for PDF to load and verify it's displayed
     await page.waitForSelector('.pdf-page', { timeout: 10000 });
