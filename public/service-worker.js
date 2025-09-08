@@ -1,3 +1,6 @@
+/* eslint-env serviceworker */
+/* global self, caches, fetch, Request, Response, Headers, URL */
+
 // Service Worker for PDF Signer - Offline Support
 const CACHE_NAME = 'pdf-signer-v1';
 const RUNTIME_CACHE = 'pdf-signer-runtime-v1';
@@ -16,7 +19,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[Service Worker] Caching static assets');
+        // Caching static assets
         // Cache the static files
         return cache.addAll(STATIC_CACHE_FILES.map(url => {
           // Add cache-busting query parameter for development
@@ -34,7 +37,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
+            // Deleting old cache
             return caches.delete(cacheName);
           }
         })
@@ -208,6 +211,6 @@ self.addEventListener('sync', (event) => {
 async function syncPendingAnnotations() {
   // This would sync with a backend API when available
   // For now, just log
-  console.log('[Service Worker] Syncing pending annotations');
+  // Syncing pending annotations
   return Promise.resolve();
 }

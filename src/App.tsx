@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { PDFViewer } from './components/PDFViewer';
 import { VirtualizedPDFViewer } from './components/VirtualizedPDFViewer';
 import { ToolPanel } from './components/ToolPanel';
+import { ResponsiveToolbar } from './components/ResponsiveToolbar';
 import { ConsentModal } from './components/ConsentModal';
 import { CoordinateDebugger } from './components/CoordinateDebugger';
-import { ResponsiveToolbar } from './components/ResponsiveToolbar';
 import { Annotation } from './lib/types';
 import { useHaptics } from './utils/haptics';
 // Forensics lazy loaded on demand to reduce initial bundle
@@ -27,6 +27,7 @@ function App() {
   const [isLoadingSample, setIsLoadingSample] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [enableCompliance, setEnableCompliance] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Feature flag: Enable virtualization for better performance with large PDFs
   const useVirtualization = true; // Set to true to enable page virtualization
@@ -36,6 +37,16 @@ function App() {
   
   // Initialize haptic feedback
   const haptics = useHaptics();
+  
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Show update prompt when available
   useEffect(() => {
@@ -232,6 +243,61 @@ function App() {
     setSelectedAnnotationId(id);
     if (id) haptics.select();
   };
+  
+  // Configure tools for ResponsiveToolbar
+  const tools = [
+    {
+      id: 'text',
+      name: 'Text',
+      icon: 'T',
+      action: () => setSelectedTool('text'),
+      active: selectedTool === 'text'
+    },
+    {
+      id: 'signature',
+      name: 'Signature',
+      icon: '✍️',
+      action: () => setSelectedTool('signature'),
+      active: selectedTool === 'signature'
+    },
+    {
+      id: 'check',
+      name: 'Check',
+      icon: '✓',
+      action: () => setSelectedTool('check'),
+      active: selectedTool === 'check'
+    },
+    {
+      id: 'date',
+      name: 'Date',
+      icon: '📅',
+      action: () => setSelectedTool('date'),
+      active: selectedTool === 'date'
+    },
+    {
+      id: 'export',
+      name: 'Export',
+      icon: '💾',
+      action: handleExportPdf,
+      active: false
+    },
+    {
+      id: 'clear',
+      name: 'Clear',
+      icon: '🗑️',
+      action: handleClearAnnotations,
+      active: false
+    },
+    {
+      id: 'reset',
+      name: 'Reset',
+      icon: '↺',
+      action: handleResetDocument,
+      active: false
+    }
+  ];
+  
+  const primaryToolIds = ['text', 'signature', 'export'];
 
   return (
     <div className="app">
@@ -289,21 +355,29 @@ function App() {
           </div>
         ) : (
           <>
-            <ToolPanel
-              onSignatureCreate={setSignatureDataUrl}
-              onToolSelect={setSelectedTool}
-              selectedTool={selectedTool}
-              onResetDocument={handleResetDocument}
-              onExportPdf={handleExportPdf}
-              onExportHover={handleExportHover}
-              hasAnnotations={annotations.length > 0}
-              isExporting={isExporting}
-              signatureDataUrl={signatureDataUrl}
-              enableCompliance={enableCompliance}
-              onComplianceChange={setEnableCompliance}
-              currentScale={scale}
-              onScaleChange={setScale}
-            />
+            {isMobile ? (
+              <ResponsiveToolbar
+                tools={tools}
+                primaryTools={primaryToolIds}
+                isDrawing={false}
+              />
+            ) : (
+              <ToolPanel
+                onSignatureCreate={setSignatureDataUrl}
+                onToolSelect={setSelectedTool}
+                selectedTool={selectedTool}
+                onResetDocument={handleResetDocument}
+                onExportPdf={handleExportPdf}
+                onExportHover={handleExportHover}
+                hasAnnotations={annotations.length > 0}
+                isExporting={isExporting}
+                signatureDataUrl={signatureDataUrl}
+                enableCompliance={enableCompliance}
+                onComplianceChange={setEnableCompliance}
+                currentScale={scale}
+                onScaleChange={setScale}
+              />
+            )}
             {useVirtualization ? (
               <VirtualizedPDFViewer
                 file={file}

@@ -51,7 +51,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     const windowHeight = window.innerHeight;
     const currentHeight = windowHeight * snapPoints[currentSnapPoint];
     const newHeight = Math.max(0, Math.min(windowHeight, currentHeight - deltaY));
-    const newSnapPoint = snapPoints.reduce((prev, curr, index) => {
+    snapPoints.reduce((prev, curr, index) => {
       const currHeight = windowHeight * curr;
       const prevHeight = windowHeight * snapPoints[prev];
       return Math.abs(currHeight - newHeight) < Math.abs(prevHeight - newHeight) ? index : prev;
@@ -94,9 +94,6 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     handleStart(e.touches[0].clientY);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    handleMove(e.touches[0].clientY);
-  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     handleStart(e.clientY);
@@ -114,17 +111,22 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleMove as any);
+      const handleTouchMove = (e: TouchEvent) => {
+        if (e.touches.length > 0) {
+          handleMove(e.touches[0].clientY);
+        }
+      };
+      document.addEventListener('touchmove', handleTouchMove);
       document.addEventListener('touchend', handleEnd);
 
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
-        document.removeEventListener('touchmove', handleMove as any);
+        // Cleanup handled in the effect above
         document.removeEventListener('touchend', handleEnd);
       };
     }
-  }, [isDragging, currentY]);
+  }, [isDragging, currentY, handleEnd, handleMouseMove, handleMouseUp, handleMove]);
 
   if (!isOpen) return null;
 

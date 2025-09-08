@@ -198,8 +198,6 @@ export function AnnotationLayer({
   onUpdate,
   isMobile
 }: AnnotationLayerProps) {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-
   return (
     <div className="annotations-layer">
       {annotations.map(annotation => (

@@ -1,0 +1,15 @@
+{
+  "env": {
+    "browser": true,
+    "serviceworker": true
+  },
+  "globals": {
+    "self": "readonly",
+    "caches": "readonly",
+    "fetch": "readonly",
+    "Request": "readonly",
+    "Response": "readonly",
+    "Headers": "readonly",
+    "URL": "readonly"
+  }
+}

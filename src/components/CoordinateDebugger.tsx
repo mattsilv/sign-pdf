@@ -147,8 +147,3 @@ export const CoordinateDebugger: React.FC = () => {
     </div>
   );
 };
-
-// Helper function to emit debug events
-export const emitDebugInfo = (info: DebugInfo) => {
-  window.dispatchEvent(new CustomEvent('pdf-debug', { detail: info }));
-};

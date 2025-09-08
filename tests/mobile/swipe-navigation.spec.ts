@@ -37,37 +37,6 @@ test.describe('Mobile Swipe Navigation', () => {
       const container = document.querySelector('.pdf-pages-container');
       if (!container) throw new Error('Container not found');
       
-      // Create a synthetic touch event in a simpler way
-      const createEvent = (type: string, x: number, y: number) => {
-        const event = document.createEvent('TouchEvent');
-        const touch = document.createTouch(
-          window,
-          container as EventTarget,
-          1,
-          x, y, // pageX, pageY
-          x, y, // screenX, screenY  
-          x, y, // clientX, clientY
-          10, 10, // radiusX, radiusY
-          0, // rotationAngle
-          1  // force
-        );
-        
-        const touchList = document.createTouchList(touch);
-        
-        event.initTouchEvent(
-          type,
-          true, // bubbles
-          true, // cancelable
-          window,
-          0,
-          false, false, false, false, // modifier keys
-          type === 'touchend' ? document.createTouchList() : touchList,
-          type === 'touchend' ? document.createTouchList() : touchList,
-          type === 'touchend' ? touchList : document.createTouchList()
-        );
-        return event;
-      };
-      
       // Alternative: dispatch mouse events as fallback
       const mouseStart = new MouseEvent('mousedown', {
         clientX: startX,
@@ -326,13 +295,12 @@ test.describe('Mobile Swipe Navigation', () => {
 
   test('should provide haptic feedback on supported devices', async ({ page }) => {
     // Check if vibration API is called
-    const vibrateCalls: number[] = [];
     
     await page.evaluateOnNewDocument(() => {
       // Mock the vibrate API
-      (window.navigator as any).vibrate = (pattern: number | number[]) => {
-        (window as any).vibrateCalls = (window as any).vibrateCalls || [];
-        (window as any).vibrateCalls.push(pattern);
+      (window.navigator as unknown as { vibrate: (pattern: number | number[]) => boolean }).vibrate = (pattern: number | number[]) => {
+        (window as unknown as { vibrateCalls: (number | number[])[] }).vibrateCalls = (window as unknown as { vibrateCalls?: (number | number[])[] }).vibrateCalls || [];
+        (window as unknown as { vibrateCalls: (number | number[])[] }).vibrateCalls.push(pattern);
         return true;
       };
     });
@@ -357,7 +325,7 @@ test.describe('Mobile Swipe Navigation', () => {
     await page.mouse.up();
     
     // Check if vibrate was called
-    const calls = await page.evaluate(() => (window as any).vibrateCalls);
+    const calls = await page.evaluate(() => (window as unknown as { vibrateCalls?: (number | number[])[] }).vibrateCalls);
     
     // On mobile devices with vibration support, this would be called
     // In our test environment, it depends on the mock
@@ -377,12 +345,12 @@ test.describe('Swipe Gesture Performance', () => {
     
     // Start performance measurement
     await page.evaluate(() => {
-      (window as any).frameCount = 0;
-      (window as any).startTime = performance.now();
+      (window as unknown as { frameCount: number }).frameCount = 0;
+      (window as unknown as { startTime: number }).startTime = performance.now();
       
       const countFrame = () => {
-        (window as any).frameCount++;
-        if (performance.now() - (window as any).startTime < 1000) {
+        (window as unknown as { frameCount: number }).frameCount++;
+        if (performance.now() - (window as unknown as { startTime: number }).startTime < 1000) {
           requestAnimationFrame(countFrame);
         }
       };
@@ -404,7 +372,7 @@ test.describe('Swipe Gesture Performance', () => {
     await page.waitForTimeout(1100);
     
     // Get frame count
-    const frameCount = await page.evaluate(() => (window as any).frameCount);
+    const frameCount = await page.evaluate(() => (window as unknown as { frameCount: number }).frameCount);
     
     // Should be close to 60fps (allowing some variance)
     expect(frameCount).toBeGreaterThan(50);

@@ -79,7 +79,7 @@ test.describe('Haptic Feedback', () => {
       // Mock vibrate function
       await page.evaluate(() => {
         window.vibrateCallCount = 0;
-        navigator.vibrate = (pattern) => {
+        navigator.vibrate = () => {
           window.vibrateCallCount++;
           return true;
         };

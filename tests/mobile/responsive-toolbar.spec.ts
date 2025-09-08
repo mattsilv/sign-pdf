@@ -9,7 +9,7 @@ test.describe('Responsive Toolbar', () => {
       
       // Upload a PDF to show the toolbar
       const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await fileInput.setInputFiles('./coordinate_test.pdf');
       
       // Wait for PDF to load
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
@@ -32,7 +32,7 @@ test.describe('Responsive Toolbar', () => {
       
       // Upload a PDF to show the toolbar
       const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await fileInput.setInputFiles('./coordinate_test.pdf');
       
       // Wait for PDF to load
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
@@ -55,7 +55,7 @@ test.describe('Responsive Toolbar', () => {
       
       // Upload a PDF
       const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await fileInput.setInputFiles('./coordinate_test.pdf');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
       // Click more button
@@ -80,7 +80,7 @@ test.describe('Responsive Toolbar', () => {
       
       // Upload a PDF
       const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await fileInput.setInputFiles('./coordinate_test.pdf');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
       // Open bottom sheet
@@ -104,7 +104,7 @@ test.describe('Responsive Toolbar', () => {
       
       // Upload a PDF
       const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await fileInput.setInputFiles('./coordinate_test.pdf');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
       // Open bottom sheet
@@ -135,7 +135,7 @@ test.describe('Responsive Toolbar', () => {
       
       // Upload a PDF
       const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await fileInput.setInputFiles('./coordinate_test.pdf');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
       // Check which toolbar is visible (depends on exact breakpoint)
@@ -152,11 +152,11 @@ test.describe('Responsive Toolbar', () => {
       
       // Upload a PDF
       const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await fileInput.setInputFiles('./coordinate_test.pdf');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
       // Check desktop toolbar is visible
-      let desktopToolbar = page.locator('.desktop-toolbar');
+      const desktopToolbar = page.locator('.desktop-toolbar');
       await expect(desktopToolbar).toBeVisible();
       
       // Resize to mobile
