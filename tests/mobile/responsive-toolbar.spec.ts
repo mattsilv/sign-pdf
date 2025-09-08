@@ -7,6 +7,9 @@ test.describe('Responsive Toolbar', () => {
     test('shows all tools in desktop toolbar', async ({ page }) => {
       await page.goto('/');
       
+      // Wait for the app to load
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
+      
       // Click "Try with Sample NDA Document" to show the toolbar
       await page.click('text="Try with Sample NDA Document"');
       
@@ -28,6 +31,9 @@ test.describe('Responsive Toolbar', () => {
 
     test('shows mobile toolbar with primary actions', async ({ page }) => {
       await page.goto('/');
+      
+      // Wait for the app to load
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       
       // Click "Try with Sample NDA Document" to show the toolbar
       await page.click('text="Try with Sample NDA Document"');

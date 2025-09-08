@@ -57,6 +57,7 @@ test.describe('Haptic Feedback', () => {
       });
       
       // Upload a file
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       
       // Wait for PDF to load
@@ -71,6 +72,7 @@ test.describe('Haptic Feedback', () => {
       await page.goto('/');
       
       // Upload a PDF first
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
@@ -96,6 +98,7 @@ test.describe('Haptic Feedback', () => {
       await page.goto('/');
       
       // Upload a PDF and add an annotation
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
@@ -197,6 +200,7 @@ test.describe('Haptic Feedback', () => {
       });
       
       // App should still function without errors
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       
       // Wait for PDF to load

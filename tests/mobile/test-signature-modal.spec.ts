@@ -15,6 +15,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload a test PDF first
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       
       // Wait for PDF to load
@@ -46,6 +47,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload PDF
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-container');
       
@@ -74,6 +76,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload PDF
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-container');
       
@@ -109,6 +112,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload PDF
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-container');
       
@@ -138,6 +142,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload PDF
+      await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
       await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-container');
       

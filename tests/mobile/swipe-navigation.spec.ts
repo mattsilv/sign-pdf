@@ -13,6 +13,9 @@ test.describe('Mobile Swipe Navigation', () => {
     // Navigate to the app
     await page.goto('/');
     
+    // Wait for the app to load
+    await page.waitForSelector('text="Try with Sample NDA Document"', { timeout: 5000 });
+    
     // Click "Try with Sample NDA Document" button
     await page.click('text="Try with Sample NDA Document"');
     
