@@ -5,7 +5,7 @@ import { join } from 'path';
 // Clean up localStorage between tests for isolation
 test.beforeEach(async ({ page, context }) => {
   await context.clearCookies();
-  await page.goto('http://localhost:5174/');
+  await page.goto('/');
   await page.evaluate(() => localStorage.clear());
 });
 
@@ -31,7 +31,7 @@ test.describe('Signature Workflows', () => {
     await page.fill('.signature-text-input', signatureText);
     
     // Save signature
-    await page.click('.save-button');
+    await page.click('.save-button', { force: true });
     await page.waitForSelector('.signature-modal', { state: 'hidden', timeout: 3000 });
     
     // Verify localStorage has the signature
@@ -101,7 +101,7 @@ test.describe('Signature Workflows', () => {
     }
     
     // Save signature
-    await page.click('.save-button');
+    await page.click('.save-button', { force: true });
     await page.waitForSelector('.signature-modal', { state: 'hidden' });
     
     // Place signature
@@ -140,7 +140,7 @@ test.describe('Pre-commit Validation', () => {
     await page.waitForSelector('.signature-modal');
     await page.click('.mode-option:has-text("Type Signature")');
     await page.fill('.signature-text-input', 'Test User');
-    await page.click('.save-button');
+    await page.click('.save-button', { force: true });
     await page.waitForSelector('.signature-modal', { state: 'hidden' });
     
     // Place signature

@@ -7,7 +7,7 @@ import { useSwipeGestures } from '../hooks/useSwipeGestures';
 import { PageThumbnails } from './PageThumbnails';
 import { TextInputModal } from './TextInputModal';
 import { AnnotationLayer } from './AnnotationLayer';
-import { emitDebugInfo } from './CoordinateDebugger';
+import { emitDebugInfo } from '../utils/debug';
 import type { PDFDocumentProxy, PageViewport } from 'pdfjs-dist';
 
 interface VirtualizedPDFViewerProps {

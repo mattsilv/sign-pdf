@@ -5,7 +5,7 @@ import { Annotation } from '../lib/types';
 // import { usePointerEvents, type PointerState } from '../hooks/usePointerEvents';
 import { usePinchZoom } from '../hooks/usePinchZoom';
 import { TextInputModal } from './TextInputModal';
-import { emitDebugInfo } from './CoordinateDebugger';
+import { emitDebugInfo } from '../utils/debug';
 import type { PDFDocumentProxy, PageViewport } from 'pdfjs-dist';
 
 interface PDFViewerProps {
