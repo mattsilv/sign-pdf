@@ -78,8 +78,7 @@ test.describe('Service Worker & Offline Support', () => {
     await page.goto('/');
     
     // Upload a test PDF
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles('coordinate_test.pdf');
+    await page.click('text="Try with Sample NDA Document"');
     
     // Wait for PDF to load
     await page.waitForSelector('.pdf-page', { timeout: 10000 });
@@ -142,8 +141,7 @@ test.describe('Service Worker & Offline Support', () => {
     
     // Try to perform an action that would normally require network
     // App should handle it gracefully
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles('coordinate_test.pdf');
+    await page.click('text="Try with Sample NDA Document"');
     
     // Should still be able to view and sign PDFs offline
     await page.waitForSelector('.pdf-page', { timeout: 10000 });

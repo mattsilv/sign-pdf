@@ -7,9 +7,8 @@ test.describe('Responsive Toolbar', () => {
     test('shows all tools in desktop toolbar', async ({ page }) => {
       await page.goto('/');
       
-      // Upload a PDF to show the toolbar
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('./coordinate_test.pdf');
+      // Click "Try with Sample NDA Document" to show the toolbar
+      await page.click('text="Try with Sample NDA Document"');
       
       // Wait for PDF to load
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
@@ -30,9 +29,8 @@ test.describe('Responsive Toolbar', () => {
     test('shows mobile toolbar with primary actions', async ({ page }) => {
       await page.goto('/');
       
-      // Upload a PDF to show the toolbar
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('./coordinate_test.pdf');
+      // Click "Try with Sample NDA Document" to show the toolbar
+      await page.click('text="Try with Sample NDA Document"');
       
       // Wait for PDF to load
       await page.waitForSelector('.pdf-page', { timeout: 10000 });

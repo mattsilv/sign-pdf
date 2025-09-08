@@ -15,8 +15,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload a test PDF first
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       
       // Wait for PDF to load
       await page.waitForSelector('.pdf-container', { timeout: 10000 });
@@ -47,8 +46,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload PDF
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-container');
       
       // Open signature modal
@@ -76,8 +74,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload PDF
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-container');
       
       // Open signature modal
@@ -112,8 +109,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload PDF
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-container');
       
       // Open signature modal
@@ -142,8 +138,7 @@ mobileDevices.forEach(({ name, device }) => {
       await page.goto('http://localhost:5173');
       
       // Upload PDF
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-container');
       
       // Open signature modal

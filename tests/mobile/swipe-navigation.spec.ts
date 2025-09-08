@@ -13,9 +13,8 @@ test.describe('Mobile Swipe Navigation', () => {
     // Navigate to the app
     await page.goto('/');
     
-    // Upload a multi-page PDF
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles(join(__dirname, '../../public/sample-nda.pdf'));
+    // Click "Try with Sample NDA Document" button
+    await page.click('text="Try with Sample NDA Document"');
     
     // Wait for PDF to load
     await page.waitForSelector('.pdf-page', { timeout: 10000 });
@@ -23,8 +22,8 @@ test.describe('Mobile Swipe Navigation', () => {
 
   test('should navigate to next page on left swipe', async ({ page }) => {
     // Check initial page
-    const initialPage = await page.locator('.page-number').first().textContent();
-    expect(initialPage).toContain('Page 1');
+    let debugInfo = await page.locator('.virtualization-debug').textContent();
+    expect(debugInfo).toContain('Current Page: 1');
     
     // Get the PDF container
     const pdfContainer = page.locator('.pdf-pages-container');
@@ -78,22 +77,69 @@ test.describe('Mobile Swipe Navigation', () => {
     await page.waitForTimeout(400);
     
     // Check if we're on page 2
-    const currentPageIndicator = await page.locator('.virtualization-debug').textContent();
-    expect(currentPageIndicator).toContain('Current Page: 2');
+    debugInfo = await page.locator('.virtualization-debug').textContent();
+    expect(debugInfo).toContain('Current Page: 2');
   });
 
   test('should navigate to previous page on right swipe', async ({ page }) => {
-    // First navigate to page 2
-    await page.locator('.page-nav button:has-text("Next")').click();
-    await page.waitForTimeout(300);
-    
-    // Verify we're on page 2
-    let currentPageIndicator = await page.locator('.virtualization-debug').textContent();
-    expect(currentPageIndicator).toContain('Current Page: 2');
-    
-    // Get the PDF container
+    // First navigate to page 2 using swipe
     const pdfContainer = page.locator('.pdf-pages-container');
     const box = await pdfContainer.boundingBox();
+    if (!box) throw new Error('PDF container not found');
+    
+    // Swipe left to go to page 2
+    await page.evaluate(({ startX, startY, endX, endY }) => {
+      const container = document.querySelector('.pdf-pages-container');
+      if (!container) throw new Error('Container not found');
+      
+      const touchStart = new TouchEvent('touchstart', {
+        touches: [new Touch({
+          identifier: 1,
+          target: container,
+          clientX: startX,
+          clientY: startY,
+        })],
+        bubbles: true,
+        cancelable: true,
+      });
+      
+      const touchMove = new TouchEvent('touchmove', {
+        touches: [new Touch({
+          identifier: 1,
+          target: container,
+          clientX: endX,
+          clientY: endY,
+        })],
+        bubbles: true,
+        cancelable: true,
+      });
+      
+      const touchEnd = new TouchEvent('touchend', {
+        changedTouches: [new Touch({
+          identifier: 1,
+          target: container,
+          clientX: endX,
+          clientY: endY,
+        })],
+        bubbles: true,
+        cancelable: true,
+      });
+      
+      container.dispatchEvent(touchStart);
+      container.dispatchEvent(touchMove);
+      container.dispatchEvent(touchEnd);
+    }, {
+      startX: box.x + box.width * 0.8,
+      startY: box.y + box.height / 2,
+      endX: box.x + box.width * 0.2,
+      endY: box.y + box.height / 2,
+    });
+    
+    await page.waitForTimeout(500);
+    
+    // Verify we're on page 2
+    let currentPageIndicator = await page.locator('.page-number').first().textContent();
+    expect(currentPageIndicator).toContain('Page 2');
     
     if (!box) throw new Error('PDF container not found');
     
@@ -143,8 +189,8 @@ test.describe('Mobile Swipe Navigation', () => {
     await page.waitForTimeout(400);
     
     // Check if we're back on page 1
-    currentPageIndicator = await page.locator('.virtualization-debug').textContent();
-    expect(currentPageIndicator).toContain('Current Page: 1');
+    debugInfo = await page.locator('.virtualization-debug').textContent();
+    expect(debugInfo).toContain('Current Page: 1');
   });
 
   test('should show swipe indicator during swipe', async ({ page }) => {
@@ -190,8 +236,8 @@ test.describe('Mobile Swipe Navigation', () => {
     await page.waitForTimeout(400);
     
     // Should still be on page 1
-    const currentPageIndicator = await page.locator('.virtualization-debug').textContent();
-    expect(currentPageIndicator).toContain('Current Page: 1');
+    const debugInfo = await page.locator('.virtualization-debug').textContent();
+    expect(debugInfo).toContain('Current Page: 1');
     
     // No swipe indicator should have appeared
     const swipeIndicatorRight = page.locator('.swipe-indicator-right');
@@ -289,8 +335,8 @@ test.describe('Mobile Swipe Navigation', () => {
     await page.waitForTimeout(500);
     
     // Check if we're on page 2
-    const currentPageIndicator = await page.locator('.virtualization-debug').textContent();
-    expect(currentPageIndicator).toContain('Current Page: 2');
+    const debugInfo = await page.locator('.virtualization-debug').textContent();
+    expect(debugInfo).toContain('Current Page: 2');
   });
 
   test('should provide haptic feedback on supported devices', async ({ page }) => {

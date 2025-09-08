@@ -57,8 +57,7 @@ test.describe('Haptic Feedback', () => {
       });
       
       // Upload a file
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       
       // Wait for PDF to load
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
@@ -72,8 +71,7 @@ test.describe('Haptic Feedback', () => {
       await page.goto('/');
       
       // Upload a PDF first
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
       // Mock vibrate function
@@ -98,8 +96,7 @@ test.describe('Haptic Feedback', () => {
       await page.goto('/');
       
       // Upload a PDF and add an annotation
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
       
       // Add an annotation
@@ -200,8 +197,7 @@ test.describe('Haptic Feedback', () => {
       });
       
       // App should still function without errors
-      const fileInput = page.locator('input[type="file"]');
-      await fileInput.setInputFiles('coordinate_test.pdf');
+      await page.click('text="Try with Sample NDA Document"');
       
       // Wait for PDF to load
       await page.waitForSelector('.pdf-page', { timeout: 10000 });
