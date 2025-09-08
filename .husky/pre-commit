@@ -3,8 +3,15 @@
 # Run lint-staged for code quality checks
 npx lint-staged
 
-# Check if dev server is running
-if ! curl -s http://localhost:5174 > /dev/null 2>&1; then
+# Check if dev server is running on either port
+DEV_PORT=""
+if curl -s http://localhost:5173 > /dev/null 2>&1; then
+  DEV_PORT=5173
+elif curl -s http://localhost:5174 > /dev/null 2>&1; then
+  DEV_PORT=5174
+fi
+
+if [ -z "$DEV_PORT" ]; then
   echo "⚠️  Dev server not running. Starting it for tests..."
   npm run dev &
   DEV_PID=$!
@@ -12,12 +19,19 @@ if ! curl -s http://localhost:5174 > /dev/null 2>&1; then
   # Wait for server to be ready (max 15 seconds)
   echo "Waiting for dev server..."
   for i in $(seq 1 15); do
-    if curl -s http://localhost:5174 > /dev/null 2>&1; then
-      echo "Dev server ready!"
+    if curl -s http://localhost:5173 > /dev/null 2>&1; then
+      echo "Dev server ready on port 5173!"
+      DEV_PORT=5173
+      break
+    elif curl -s http://localhost:5174 > /dev/null 2>&1; then
+      echo "Dev server ready on port 5174!"
+      DEV_PORT=5174
       break
     fi
     sleep 1
   done
+else
+  echo "✓ Dev server already running on port $DEV_PORT"
 fi
 
 # Run E2E tests - only the pre-commit validation suite
